@@ -1,0 +1,9 @@
+[HostInformation]
+host = localhost
+port = 4242
+
+[SensorInformation]
+sensorid = 37109
+sensortype = Unknown
+location = Unknown
+
