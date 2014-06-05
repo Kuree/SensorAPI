@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>2634d876-faa6-4caf-a5e0-73b0c6ef86b5</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>API\SensorAPI.py</StartupFile>
+    <StartupFile>Test.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -23,6 +23,8 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="API\Configuration.py" />
+    <Compile Include="API\Put.py" />
+    <Compile Include="API\Query.py" />
     <Compile Include="API\SensorAPI.py" />
     <Compile Include="API\__init__.py" />
     <Compile Include="Test.py" />
