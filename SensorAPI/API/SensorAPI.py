@@ -6,31 +6,20 @@ import requests
 import time
 
 class SensorAPI:
-    def __init__(self):
-        self.config = Configuration.Configuration()
+    def __init__(self, conf):
+        self.config = conf
         pass
-
-    def computeMetrics(self, timestamp, value):
-        metric = self.config.location
-        tags = {"sensorID": self.config.sensorID, "sensorType": self.config.sensorType}
-        return {'metric': metric, 'timestamp': timestamp, 'value': value, 'tags' : tags}
-
-    #def put(self, timestamp = int(round(time.time() * 1000)), value = 0):
-    #    url = 'http://{0}:{1}/api/put'.format(self.config.host, self.config.port)
-    #    tsdbMetrics = self.computeMetrics(timestamp, value)
-    #    return self.postRequest(url, tsdbMetrics)
 
     
     
     def multiplePut(self, putDatas):
-        url = 'http://{0}:{1}/api/put?details'.format(self.config.host, self.config.port)
+        url = 'http://{0}:{1}/api/put?details'.format(self.config.getHost(), self.config.getPort())
         return self.postRequest(url, putDatas)
 
    
-    def singlePut(self, timestamp = int(round(time.time() * 1000)), value = 0, conf = Configuration.Configuration()):
-        data = PutData(timestamp=timestamp, value = value, conf = conf)
+    def singlePut(self, timestamp, value, tags):
+        data = PutData(timestamp, value, tags)
         return self.multiplePut([data.toPutData()])
-
 
     def postRequest(self, url, requestData):
         try:
@@ -41,7 +30,7 @@ class SensorAPI:
             return e.message
         
     def batch(self, dic):
-        url = 'http://{0}:{1}/api/put?'.format(self.config.host, self.config.port)
+        url = 'http://{0}:{1}/api/put?'.format(self.config.getHost(), self.config.getPort())
         tsdbMetrics = []
         for k in dic:
             tsdbMetrics += [self.computeMetrics(k, dic[k])]
@@ -53,13 +42,12 @@ class SensorAPI:
         queryData["start"] = start
         queryData["end"] = end
         queryData["queries"] = queries
-        url = 'http://{0}:{1}/api/query'.format(self.config.host, self.config.port)
+        url = 'http://{0}:{1}/api/query'.format(self.config.getHost(), self.config.getPort())
         return self.postRequest(url, queryData)
 
     
-    def singleQuery(self, start = int(round(time.time()*1000 - 2000)), end = int(round(time.time() * 1000)), 
-                    location = "Unknown", sensorID = "Unknown", sensorType = "Unknown"):
-        query = QueryData(location = location, sensorID = sensorID, sensorType = sensorType)
+    def singleQuery(self, start, end, tags):
+        query = QueryData(tags)
         print query.toQueryData()
         return self.multipleQuery(start, end, [query.toQueryData()])
 

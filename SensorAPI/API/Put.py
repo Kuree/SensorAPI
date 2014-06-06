@@ -3,15 +3,16 @@ import Configuration
 
 class PutData:
     """Single put data"""
-    def __init__(self, timestamp = int(round(time.time())), value = None, conf = Configuration.Configuration()):
+    def __init__(self, timestamp, value, tags):
         self.timestamp = timestamp
         self.value = value
-        self.conf = conf
+        self.tags = tags
+        self.metric = tags.metric
 
     def toPutData(self):
         data = {}
-        data["metric"] = self.conf.location
+        data["metric"] = self.metric
         data["timestamp"] = self.timestamp
         data["value"] = self.value
-        data["tags"] = { "sensorID" : self.conf.sensorID, "sensorType" : self.conf.sensorType }
+        data["tags"] = self.tags.toTagData()
         return data

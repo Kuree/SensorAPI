@@ -1,49 +1,46 @@
 import ConfigParser
-import os.path
 import random
+import os.path
+import json
 
 class Configuration:
 
-    def __init__(self):
-        self.host = None
-        self.port = None
-        self.sensorID = None
-        self.sensorType = None
-        self.location = None
-        if os.path.isfile("conf"):
-            self.loadConfiguration()
+    def __init__(self, filename = ""):
+        if len(filename) > 0:
+            self.loadConfiguration(filename)
+            return
+        elif os.path.isfile("master.json"):
+            self.loadConfiguration("master.json")
         else:
-            self.createConfiguration()
-            self.saveConfiguration()
-
-    def createConfiguration(self):
-        self.host = "localhost"
-        self.port = 4242
-        self.sensorID = str(random.randint(1, 100000))
-        self.sensorType = "Unknown"
-        self.location = "Unknown"
+            self.__cfg = {}
+            self.__cfg["batchEnabled"] = False
+            self.__cfg["host"] = "localhost"
+            self.__cfg["port"] = "4242"
+            self.__cfg["tags"] = {}
 
 
-    def saveConfiguration(self):
-        config = ConfigParser.RawConfigParser()
-        config.add_section("HostInformation")
-        config.set("HostInformation", "host", self.host)
-        config.set("HostInformation", "port", self.port)
-        config.add_section("SensorInformation")
-        config.set("SensorInformation", "sensorID", self.sensorID)
-        config.set("SensorInformation", "sensorType", self.sensorType)
-        config.set("SensorInformation", "location", self.location)
-        with open('conf', 'wb') as configfile:
-            config.write(configfile)
+    def saveConfiguration(self, filename = ""):
+        if len(filename) == 0:
+            filename = "master.json"    # create a master json in the main folder
+        file = open(filename, "w")
+        file.write(json.dump(self.__cfg))
+        file.close()
+       
+    def getHost(self):
+        return self.__cfg["host"]
 
-    def loadConfiguration(self):
-        config = ConfigParser.RawConfigParser()
-        config.read("conf")
-        self.host = config.get("HostInformation", "host")
-        self.port = config.getint("HostInformation", "port")
-        self.sensorID = config.get("SensorInformation", "sensorID")
-        self.sensorType = config.get("SensorInformation", "sensorType")
-        self.location = config.get("SensorInformation", "location")
+    def getPort(self):
+        return int(self.__cfg["port"])
 
-    def configExists():
-        return os.path.isfile("conf")
+    def loadConfiguration(self, filename):  
+        self.__cfg = json.load(open(filename, 'r'))
+
+    def addTag(self, tagName):
+        self.__cfg["tags"][tagName] = ""
+
+    def removeTag(self, tagName):
+        if self.__cfg.has_key(tagName):
+            self.__cfg["tags"].pop(tagName)
+    def hasTag(self, tagName):
+        return tagName in self.__cfg["tags"]
+
