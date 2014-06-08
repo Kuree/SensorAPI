@@ -5,51 +5,77 @@ import json
 import requests
 import time
 
-class SensorAPI:
+class SensorAPI(object):
+    '''API that dealing with web request with OpenTSDB'''
     def __init__(self, conf):
-        self.config = conf
-        pass
+        '''
+        Initialize the sensor API with Configuration file as the API needs to know the request address and port
+        It is recommended to use SensorClient in stead of SensorAPI for flexibility
 
-    
+        conf: API.Configuration
+        '''
+        self.config = conf
+        return
     
     def multiplePut(self, putDatas):
+        '''
+        Put multiple data points into OpenTSDB
+        Returns multiple feedback in JSON
+
+        putDatas: list<PutData>
+        '''
         url = 'http://{0}:{1}/api/put?details'.format(self.config.getHost(), self.config.getPort())
-        return self.postRequest(url, putDatas)
+        return self.__postRequest(url, putDatas)
 
-   
-    def singlePut(self, timestamp, value, tags):
-        data = PutData(timestamp, value, tags)
-        return self.multiplePut([data.toPutData()])
+    def singlePut(self, putData):
+        '''
+        Put single data point into OpenTSDB.
+        Returns feedback for a single put in JSON
 
-    def postRequest(self, url, requestData):
+        data: API.PutData
+        '''
+        return self.multiplePut([putData.toPutData()])
+
+    def __postRequest(self, url, requestData):
+        '''
+        Basic web request function for Sensor API
+        Returns web request response if success; otherwise returns exception message
+        
+        url: string
+        requestData: Dictionary structure. The function itself will dump the dictionary to JSON for you
+        '''
         try:
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             r = requests.post(url, data=json.dumps(requestData), headers=headers)
             return r.text
         except Exception as e:
             return e.message
-        
-    def batch(self, dic):
-        url = 'http://{0}:{1}/api/put?'.format(self.config.getHost(), self.config.getPort())
-        tsdbMetrics = []
-        for k in dic:
-            tsdbMetrics += [self.computeMetrics(k, dic[k])]
-        return self.postRequest(url, tsdbMetrics)
 
 
     def multipleQuery(self, start, end, queries):
+        '''
+        Query the OpenTSDB server with start and end time with multiple query data
+        Returns JSON data correspond to given query data
+
+        start: start timestamp to query. Standard int in millisecond precision.
+        end: end timestamp to query. Standard int in millisecond precision.
+        queries: list<QueryData>
+        '''
         queryData = {}
         queryData["start"] = start
         queryData["end"] = end
         queryData["queries"] = queries
         url = 'http://{0}:{1}/api/query'.format(self.config.getHost(), self.config.getPort())
-        return self.postRequest(url, queryData)
+        return self.__postRequest(url, queryData)
 
     
-    def singleQuery(self, start, end, tags):
-        query = QueryData(tags)
-        print query.toQueryData()
-        return self.multipleQuery(start, end, [query.toQueryData()])
+    def singleQuery(self, start, end, queryData):
+        '''
+        Query the OpenTSDB server with start and end time.
+        Returns JSON data correspond to given query data
 
-    def now(self):
-        return int(round(time.time() * 1000))
+        start: start timestamp to query. Standard int in millisecond precision.
+        end: end timestamp to query. Standard int in millisecond precision.
+        queryData: QueryData
+        '''
+        return self.multipleQuery(start, end, [queryData.toQueryData()])

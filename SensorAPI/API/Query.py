@@ -1,7 +1,13 @@
-# int(round(time.time() * 1000))
-class QueryData:
+class QueryAggregator(object):
+    Sum = "sum"
+    Min = "min"
+    Max = "max"
+    Average = "avg"
+    StandardDeviation = "dev"
+
+class QueryData(object):
     """Single query data"""
-    def __init__(self, tags, aggregator = "sum",):
+    def __init__(self, tags, aggregator = QueryAggregator.Sum):
         '''Initialize the query
         '''
         self.tags = tags
@@ -13,3 +19,5 @@ class QueryData:
         result["tags"] = self.tags.toTagData()
         result["aggregator"] = self.aggregator
         return result
+
+

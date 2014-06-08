@@ -12,3 +12,14 @@ class Tags:
 
     def toTagData(self):
         return self.__tags
+
+    def getTags(self):
+        return self.__tags.keys()
+    
+    def clearTags(self):
+        self.__tags.clear()
+
+    def copy(self):
+        new = Tags(self.__config, self.metric)
+        new.__tags = self.__tags.copy()
+        return new

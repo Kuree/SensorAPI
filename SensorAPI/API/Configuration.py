@@ -3,7 +3,7 @@ import random
 import os.path
 import json
 
-class Configuration:
+class Configuration(object):
 
     def __init__(self, filename = ""):
         if len(filename) > 0:
@@ -37,6 +37,9 @@ class Configuration:
 
     def addTag(self, tagName):
         self.__cfg["tags"][tagName] = ""
+
+    def updateTag(self, tagName, value):
+        self.__cfg["tags"][tagName] = value
 
     def removeTag(self, tagName):
         if self.__cfg.has_key(tagName):

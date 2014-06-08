@@ -20,13 +20,12 @@ tags2.addTag("sensorID", "5678")
 tags2.addTag("sensorID", "type2")
 
 # put function will return a state string
-print client.singlePut(client.now(), 1, tags1)
-print client.singlePut(client.now(), 2, tags2)
-
+print client.singlePut(1, tags1, timestamp = client.now())
+print client.singlePut(2, tags2, timestamp = client.now())
 
 # query data
 start = client.now() - 2000000
 print client.singleQuery(start, client.now(), tags1)
 
 
-
+#print QueryAggregator.Sum

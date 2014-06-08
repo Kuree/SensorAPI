@@ -1,12 +1,12 @@
 import time
 import Configuration
 
-class PutData:
+class PutData(object):
     """Single put data"""
     def __init__(self, timestamp, value, tags):
         self.timestamp = timestamp
         self.value = value
-        self.tags = tags
+        self.tags = tags.copy()
         self.metric = tags.metric
 
     def toPutData(self):
