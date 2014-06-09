@@ -1,27 +1,24 @@
 from API import *
-from multiprocessing import Process, Queue
+import Queue
 import time
 class SensorClient:
     '''An easy to use sensor client for OpenTSDB'''
-    def pushToBuffer(self, timestamp, value, tags):
-        p = Process(target = self.__pushToBuffer, args=(value,))
-        p.start()
-        p.join()
 
-    def __pushToBuffer(self, value, tags, timestamp = None):
+    def pushToBuffer(self, value, tags, timestamp = None):
         if timestamp == None: timestamp = self.now()
-        self.__buffer.put(PutData(timestamp, value, tags))
+        self.__queue.put(PutData(timestamp, value, tags))
+        self.__queue.task_done()
+
 
     def batch(self):
-        p = Process(target=self.__batch)
-        p.start()
-        p.join()
-
-    def __batch(self):
         putDatas = []
-        for data in iter(self.__buffer.get, "STOP"):
-            putDatas.append(data)
-        self.api.multiplePut(putDatas)
+        #for data in iter(self.__queue.get, "STOP"):
+        #    putDatas.append(data)
+        while not self.__queue.empty():
+            putDatas.append(self.__queue.get())
+        self.__queue.join()
+        return self.api.multiplePut(putDatas)
+        
 
     def __init__(self, conf):
         '''
@@ -31,9 +28,9 @@ class SensorClient:
         '''
         self.conf = conf
         self.api = SensorAPI(conf)
-        self.__buffer = Queue()
+        self.__queue = Queue.Queue()
 
-    def singlePut(self, value, tags, timestamp = None):
+    def singlePut(self, timestamp, value, tags):
         '''
         Put single data point into OpenTSDB.
         Returns feedback for a single put
@@ -85,4 +82,5 @@ class SensorClient:
         '''
         return int(round(time * 1000))
 
-    
+    def toPythonTime(self, timestamp):
+        return timestamp / 1000.0

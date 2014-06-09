@@ -7,7 +7,7 @@ class Tags:
         self.metric = metric
 
     def addTag(self, tagName, tagValue):
-        if self.__config.hasTag(tagName) and tagName not in self.__tags:
+        if tagName not in self.__tags:
             self.__tags[tagName] = tagValue
 
     def toTagData(self):
@@ -18,6 +18,10 @@ class Tags:
     
     def clearTags(self):
         self.__tags.clear()
+
+    def updateTags(self, tagName, tagValue):
+        if tagName in self.__tags:
+            self.__tags[tagName] = tagValue
 
     def copy(self):
         new = Tags(self.__config, self.metric)

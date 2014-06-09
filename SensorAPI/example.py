@@ -2,10 +2,6 @@ from Client import *
 # create configuration for sensor client
 conf = Configuration()
 
-# add tags to configuration
-conf.addTag("sensorID")
-conf.addTag("sensorType")
-
 # create a sensor client
 client = SensorClient(conf)
 
@@ -20,12 +16,26 @@ tags2.addTag("sensorID", "5678")
 tags2.addTag("sensorID", "type2")
 
 # put function will return a state string
-print client.singlePut(1, tags1, timestamp = client.now())
-print client.singlePut(2, tags2, timestamp = client.now())
+print client.singlePut(client.now(), 1, tags1)
+print client.singlePut(client.now(), 2, tags1)
+
+
+# multiple put
+data = []
+for i in range(10):
+    time.sleep(0.01) # some work to fetch data
+    data += [(client.now(), i)]
+print client.multiplePut(data, tags1)
+
 
 # query data
 start = client.now() - 2000000
 print client.singleQuery(start, client.now(), tags1)
 
 
-#print QueryAggregator.Sum
+
+# batch data
+# Not working right now
+#client.pushToBuffer(client.now(), 1, tags1)
+#client.pushToBuffer(client.now(), 2, tags1)
+#print client.batch()

@@ -35,15 +35,15 @@ class Configuration(object):
     def loadConfiguration(self, filename):  
         self.__cfg = json.load(open(filename, 'r'))
 
-    def addTag(self, tagName):
-        self.__cfg["tags"][tagName] = ""
+    #def addTag(self, tagName):
+    #    self.__cfg["tags"][tagName] = ""
 
-    def updateTag(self, tagName, value):
-        self.__cfg["tags"][tagName] = value
+    #def updateTag(self, tagName, value):
+    #    self.__cfg["tags"][tagName] = value
 
-    def removeTag(self, tagName):
-        if self.__cfg.has_key(tagName):
-            self.__cfg["tags"].pop(tagName)
-    def hasTag(self, tagName):
-        return tagName in self.__cfg["tags"]
+    #def removeTag(self, tagName):
+    #    if self.__cfg.has_key(tagName):
+    #        self.__cfg["tags"].pop(tagName)
+    #def hasTag(self, tagName):
+    #    return tagName in self.__cfg["tags"]
 

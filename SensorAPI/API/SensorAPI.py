@@ -24,8 +24,11 @@ class SensorAPI(object):
 
         putDatas: list<PutData>
         '''
+        datas = []
+        for d in putDatas:
+            datas += [d.toPutData()]
         url = 'http://{0}:{1}/api/put?details'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest(url, putDatas)
+        return self.__postRequest(url, datas)
 
     def singlePut(self, putData):
         '''
@@ -34,7 +37,7 @@ class SensorAPI(object):
 
         data: API.PutData
         '''
-        return self.multiplePut([putData.toPutData()])
+        return self.multiplePut([putData])
 
     def __postRequest(self, url, requestData):
         '''
