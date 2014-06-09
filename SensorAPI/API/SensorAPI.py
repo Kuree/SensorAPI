@@ -27,8 +27,8 @@ class SensorAPI(object):
         datas = []
         for d in putDatas:
             datas += [d.toPutData()]
-        url = 'http://{0}:{1}/api/put?details'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest(url, datas)
+        url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        return self.__postRequest(url, "put", datas)
 
     def singlePut(self, putData):
         '''
@@ -39,7 +39,7 @@ class SensorAPI(object):
         '''
         return self.multiplePut([putData])
 
-    def __postRequest(self, url, requestData):
+    def __postRequest(self, url, method, requestData):
         '''
         Basic web request function for Sensor API
         Returns web request response if success; otherwise returns exception message
@@ -49,7 +49,9 @@ class SensorAPI(object):
         '''
         try:
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-            r = requests.post(url, data=json.dumps(requestData), headers=headers)
+            jsonData = { method : [requestData]}
+            s = json.dumps(jsonData)
+            r = requests.post(url, data=json.dumps(jsonData) , headers=headers)
             return r.text
         except Exception as e:
             return e.message
@@ -68,8 +70,8 @@ class SensorAPI(object):
         queryData["start"] = start
         queryData["end"] = end
         queryData["queries"] = queries
-        url = 'http://{0}:{1}/api/query'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest(url, queryData)
+        url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        return self.__postRequest(url, "query", queryData)
 
     
     def singleQuery(self, start, end, queryData):

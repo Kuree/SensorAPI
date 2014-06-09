@@ -29,15 +29,21 @@
     <Compile Include="API\Tags.py" />
     <Compile Include="API\__init__.py" />
     <Compile Include="Client\SensorClient.py" />
-    <Compile Include="Client\SensorClientMaster.py" />
     <Compile Include="Client\__init__.py" />
     <Compile Include="GUI\__init__.py" />
     <Compile Include="example.py" />
+    <Compile Include="Server\run.py" />
+    <Compile Include="Server\Service\OpenTSDBService.py" />
+    <Compile Include="Server\Service\__init__.py" />
+    <Compile Include="Server\util.py" />
+    <Compile Include="Server\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="API\" />
     <Folder Include="Client\" />
     <Folder Include="GUI\" />
+    <Folder Include="Server\" />
+    <Folder Include="Server\Service\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="master.json" />
