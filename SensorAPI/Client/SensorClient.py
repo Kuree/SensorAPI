@@ -5,7 +5,7 @@ class SensorClient:
     '''An easy to use sensor client for OpenTSDB'''
 
     def pushToBuffer(self, value, tags, timestamp = None):
-        if timestamp == None: timestamp = self.now()
+        if timestamp == None: timestamp = self.nowMS()
         self.__queue.put(PutData(timestamp, value, tags))
         self.__queue.task_done()
 
@@ -40,7 +40,7 @@ class SensorClient:
         timestamp: time in int (millisecond precision). Leaving it None will use the current system time.
             Note: Python built-in time.time() function returns a float in seconds. Using now() or getTimestamp(time) function is recommended
         '''
-        if timestamp == None: timestamp = self.now()
+        if timestamp == None: timestamp = self.nowMS()
         putData = PutData(timestamp, value, tags)
         return self.api.singlePut(putData)
 
@@ -51,37 +51,75 @@ class SensorClient:
 
         valueTuples: list<(timestamp, value, tags)>
         '''
-
         # TODO: Add data validation
         datas = []
         for tup in valueTuples:
             datas += [PutData(tup[0], tup[1], tup[2].copy())]
         return self.api.multiplePut(datas)
 
-    def now(self):
+    def nowMS(self):
         '''
-        Returns the current timestamp
+        Returns the current timestamp in UTC time with millisecond precision
         '''
-        return int(round(time.time() * 1000))
+        from datetime import datetime
+        return self.getUTCTimestampMS(datetime.utcnow())
 
-    def singleQuery(self, start, end, tags, aggregator = None):
+    def nowS(self):
+        '''
+        Returns the current timestamp in UTC time with second precision
+        '''
+        from datetime import datetime
+        return self.getUTCTimestampS(datetime.utcnow())
+        pass
+
+    def singleQuery(self, start, end, tags, aggregator = None, downSample = None):
         '''
         Returns the query result in JSON from given start time, end time, and tags
 
         start: start timestamp to query. Standard int in millisecond precision.
         end: end timestamp to query. Standard int in millisecond precision.
         tags: API.Tags
+        aggregator: API.QueryAggregator, enum. If value not given, the API will use average by default
+        downSample: API.DownSample
         '''
-        query = QueryData(tags, aggregator)
+        query = QueryData(tags, aggregator, downSample)
         return self.api.singleQuery(start, end, query)
 
-    def getTimestamp(self, time):
+    def getUTCTimestampMS(self, dateTime):
         '''
-        Returns the standard timestamp with given time
-
-        time: Python specific time in float
+        Returns the standard timestamp with millisecond precision from given time
+        Note: for database performance concern, use second precision if possible
+        dateTime: Python DateTime object
         '''
-        return int(round(time * 1000))
+        import calendar
+        return int(calendar.timegm(dateTime.timetuple()) * 1000 + dateTime.microsecond / 1000)
 
-    def toPythonTime(self, timestamp):
-        return timestamp / 1000.0
+    def getUTCTimestampS(self, dateTime):
+        '''
+        Returns the standard timestamp with second precision from given time
+        Note: For database performance concern, using second precision is recommended
+
+        dateTime: Python DateTime object
+        '''
+        import calendar
+        return int(calendar.timegm(dateTime.timetuple()))
+
+    def singleQueryLast(self, tags):
+        '''
+        Returns the last timestamp and value from given tags
+
+        tags: API.Tags
+        '''
+        last = QueryLast(tags)
+        return self.api.singleQueryLast(last)
+
+    def multipleQueryLast(self, tagsList):
+        '''
+        Returns the last timestamps and values from given tags list
+
+        tags: list<API.Tags>
+        '''
+        lastList=[]
+        for tags in tagsList:
+            lastList += [tags]
+        return self.api.multipleQueryLast(lastList)

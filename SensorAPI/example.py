@@ -1,5 +1,6 @@
 from Client import *
 import json
+
 # create configuration for sensor client
 conf = Configuration()
 
@@ -21,17 +22,21 @@ tags2.addTag("sensorID", "type2")
 #print client.singlePut(client.now(), 2, tags1)
 
 
-## multiple put
+# multiple put
 data = []
 for i in range(10):
     time.sleep(0.01) # some work to fetch data
-    data += [(client.now(), i, tags1)]
+    data += [(client.nowMS(), i, tags1)]
 print client.multiplePut(data)
 
 
 # query data
-start = client.now() - 2000000
-print client.singleQuery(start, client.now(), tags1)
+start = client.nowMS() - 2000000
+print client.singleQuery(start, client.nowMS(), tags1)
+
+
+# query last put
+#print client.singleQueryLast(tags1)
 
 
 

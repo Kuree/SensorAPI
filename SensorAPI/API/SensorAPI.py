@@ -68,7 +68,10 @@ class SensorAPI(object):
         queryData = {}
         queryData["start"] = start
         queryData["end"] = end
-        queryData["queries"] = queries
+        data = []
+        for query in queries:
+            data += [query.toQueryData()]
+        queryData["queries"] = data
         url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
         return self.__postRequest(url, "query", queryData)
 
@@ -82,4 +85,18 @@ class SensorAPI(object):
         end: end timestamp to query. Standard int in millisecond precision.
         queryData: QueryData
         '''
-        return self.multipleQuery(start, end, [queryData.toQueryData()])
+        return self.multipleQuery(start, end, [queryData])
+
+    def singleQueryLast(self, queryLast):
+        return self.multipleQueryLast([queryLast])
+
+    def multipleQueryLast(self, queryLastList):
+        queryLastData = {}
+        data = []
+        for queryLast in queryLastList:
+            data += [queryLast.toQueryData()]
+        queryLastData["queries"] = data
+        url = url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+
+        return self.__postRequest(url, "querylast", queryLastData)
+        pass
