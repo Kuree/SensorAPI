@@ -2,6 +2,7 @@ from spyne.decorator import srpc
 from spyne.service import ServiceBase
 from spyne.model.primitive import String
 import json
+import requests
 
 class OpenTSDBService(ServiceBase):
 
@@ -19,7 +20,7 @@ class OpenTSDBService(ServiceBase):
         return OpenTSDBService._putRequest(url, data)
 
     @srpc(String, _returns=String)
-    def queryLast(data):
+    def querylast(data):
         url = 'http://{0}:{1}/api/query/last'.format("134.82.132.98", 4242)
         return OpenTSDBService._putRequest(url, data)
 

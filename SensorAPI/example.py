@@ -1,5 +1,6 @@
 from Client import *
 import json
+import requests
 
 # create configuration for sensor client
 conf = Configuration()
@@ -18,11 +19,11 @@ tags2.addTag("sensorID", "5678")
 tags2.addTag("sensorID", "type2")
 
 ## put function will return a state string
-#print client.singlePut(client.now(), 1, tags1)
-#print client.singlePut(client.now(), 2, tags1)
+print client.singlePut(client.now(), 1, tags1)
+print client.singlePut(client.now(), 2, tags1)
 
 
-# multiple put
+## multiple put
 data = []
 for i in range(10):
     time.sleep(0.01) # some work to fetch data
@@ -36,6 +37,8 @@ print client.singleQuery(start, client.nowMS(), tags1)
 
 
 # query last put
+# OpenTSDB 2.0 not supported
+# Waiting for 2.1
 #print client.singleQueryLast(tags1)
 
 
