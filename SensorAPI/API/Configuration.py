@@ -2,10 +2,13 @@ import ConfigParser
 import random
 import os.path
 import json
+import logging
 
 class Configuration(object):
 
     def __init__(self, filename = ""):
+        self.logger = logging.getLogger("SensorAPI_API")
+        #self.logger.setLevel(
         if len(filename) > 0:
             self.loadConfiguration(filename)
             return
@@ -17,6 +20,7 @@ class Configuration(object):
             self.__cfg["host"] = "localhost"
             self.__cfg["port"] = "4242"
             self.__cfg["tags"] = {}
+            self.saveConfiguration()
 
 
     def saveConfiguration(self, filename = ""):
@@ -24,6 +28,7 @@ class Configuration(object):
             filename = "master.json"    # create a master json in the main folder
         file = open(filename, "w")
         file.write(json.dump(self.__cfg))
+        
         file.close()
        
     def getHost(self):

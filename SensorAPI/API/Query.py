@@ -7,11 +7,14 @@ class QueryAggregator(object):
 
 class QueryData(object):
     """Single query data"""
-    def __init__(self, tags, aggregator = QueryAggregator.Sum):
+    def __init__(self, tags, aggregator):
         '''Initialize the query
         '''
         self.tags = tags
-        self.aggregator  = aggregator
+        if aggregator == None:
+            self.aggregator = QueryAggregator.Average
+        else:
+            self.aggregator  = aggregator
 
     def toQueryData(self):
         result = {}

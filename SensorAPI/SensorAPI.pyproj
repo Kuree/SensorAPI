@@ -26,6 +26,7 @@
     <Compile Include="API\Put.py" />
     <Compile Include="API\Query.py" />
     <Compile Include="API\SensorAPI.py" />
+    <Compile Include="API\Suggestion.py" />
     <Compile Include="API\Tags.py" />
     <Compile Include="API\__init__.py" />
     <Compile Include="Client\SensorClient.py" />

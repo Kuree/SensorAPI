@@ -44,17 +44,18 @@ class SensorClient:
         putData = PutData(timestamp, value, tags)
         return self.api.singlePut(putData)
 
-    def multiplePut(self, valueTuples, tags):
+    def multiplePut(self, valueTuples):
         '''
         Put multiple data points into OpenTSDB.
         Returns feedback for multiple put
 
-        valueTuples: list<(timestamp, value)>
-        tags: API.Tags
+        valueTuples: list<(timestamp, value, tags)>
         '''
+
+        # TODO: Add data validation
         datas = []
         for tup in valueTuples:
-            datas += [PutData(tup[0], tup[1], tags)]
+            datas += [PutData(tup[0], tup[1], tup[2].copy())]
         return self.api.multiplePut(datas)
 
     def now(self):
@@ -63,7 +64,7 @@ class SensorClient:
         '''
         return int(round(time.time() * 1000))
 
-    def singleQuery(self, start, end, tags):
+    def singleQuery(self, start, end, tags, aggregator = None):
         '''
         Returns the query result in JSON from given start time, end time, and tags
 
@@ -71,7 +72,7 @@ class SensorClient:
         end: end timestamp to query. Standard int in millisecond precision.
         tags: API.Tags
         '''
-        query = QueryData(tags)
+        query = QueryData(tags, aggregator)
         return self.api.singleQuery(start, end, query)
 
     def getTimestamp(self, time):

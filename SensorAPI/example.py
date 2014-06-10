@@ -21,12 +21,12 @@ tags2.addTag("sensorID", "type2")
 #print client.singlePut(client.now(), 2, tags1)
 
 
-### multiple put
-#data = []
-#for i in range(10):
-#    time.sleep(0.01) # some work to fetch data
-#    data += [(client.now(), i)]
-#print client.multiplePut(data, tags1)
+## multiple put
+data = []
+for i in range(10):
+    time.sleep(0.01) # some work to fetch data
+    data += [(client.now(), i, tags1)]
+print client.multiplePut(data)
 
 
 # query data

@@ -50,7 +50,6 @@ class SensorAPI(object):
         try:
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             jsonData = { method : [requestData]}
-            s = json.dumps(jsonData)
             r = requests.post(url, data=json.dumps(jsonData) , headers=headers)
             return r.text
         except Exception as e:
