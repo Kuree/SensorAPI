@@ -27,3 +27,10 @@ class Tags:
         new = Tags(self.__config, self.metric)
         new.__tags = self.__tags.copy()
         return new
+
+
+    def __repr__(self):
+        result = ""
+        for k in self.__tags:
+            result += "key: {0} value: {1}, ".format(k, self.__tags[k])
+        return result[0:-2]

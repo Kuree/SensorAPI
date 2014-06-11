@@ -50,6 +50,6 @@ print client.singleQuery(start, client.nowMS(), tags1)
 
 
 # batch data
-client.pushToBuffer(1, tags1, client.nowMS())
-client.pushToBuffer(2, tags1, client.nowMS())
+client.pushToBuffer(client.nowMS(), 1, tags1)
+client.pushToBuffer(client.nowMS(), 2, tags1)
 print client.batch()

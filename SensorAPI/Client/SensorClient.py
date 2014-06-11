@@ -6,7 +6,7 @@ import logging
 class SensorClient:
     '''An easy to use sensor client for OpenTSDB'''
 
-    def pushToBuffer(self, value, tags, timestamp = None):
+    def pushToBuffer(self, timestamp, value, tags):
         if timestamp == None: timestamp = self.nowMS()
         self.__queue.put(PutData(timestamp, value, tags))
         self.__queue.task_done()
@@ -31,6 +31,10 @@ class SensorClient:
         self.conf = conf
         self.api = SensorAPI(conf)
         self.__queue = Queue.Queue()
+
+        self.logger = logging.getLogger("SensorAPI_API")
+
+        self.logger.info("SensorAPI created. Host IP: {0}, port: {1}".format(self.conf.getHost(), self.conf.getPort()))
 
     def singlePut(self, timestamp, value, tags):
         '''
@@ -57,6 +61,7 @@ class SensorClient:
         datas = []
         for tup in valueTuples:
             datas += [PutData(tup[0], tup[1], tup[2].copy())]
+
         return self.api.multiplePut(datas)
 
     def nowMS(self):

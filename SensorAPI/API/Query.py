@@ -37,6 +37,11 @@ class QueryData(object):
         return result
 
 
+    def __repr__(self):
+        result = "Query Info: metric :{0}, tags: {1}, aggregator: {2}, downsample: {3}".format(self.tags.metric, self.tags, self.aggregator, self.downSample)
+        return result
+
+
 class DownSample:
     def __inif__(self, downsampleRate, aggregator):
         self.aggregator = aggregator

@@ -16,6 +16,7 @@ class SensorAPI(object):
         conf: API.Configuration
         '''
         self.config = conf
+        self.logger = logging.getLogger("SensorAPI_API")
         return
     
     def multiplePut(self, putDatas):
@@ -26,6 +27,12 @@ class SensorAPI(object):
         putDatas: list<PutData>
         '''
         datas = []
+
+        self.logger.info("Put data count: {0}".format(len(putDatas)))
+        if self.logger.isEnabledFor(logging.DEBUG):
+            for data in putDatas:
+                self.logger.debug("PutData: {0}".format(data))
+
         for d in putDatas:
             datas += [d.toPutData()]
         url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
@@ -66,6 +73,11 @@ class SensorAPI(object):
         end: end timestamp to query. Standard int in millisecond precision.
         queries: list<QueryData>
         '''
+        self.logger.info("Query Info: start: {0}, end: {1}, query count: {0}".format(start, end, len(queries)))
+        if self.logger.isEnabledFor(logging.DEBUG):
+            for query in queries:
+                self.logger.debug("QueryData: {0}".format(query))
+
         queryData = {}
         queryData["start"] = start
         queryData["end"] = end
@@ -92,11 +104,14 @@ class SensorAPI(object):
         return self.multipleQueryLast([queryLast])
 
     def multipleQueryLast(self, queryLastList):
+
         queryLastData = {}
         data = []
         for queryLast in queryLastList:
             data += [queryLast.toQueryData()]
         queryLastData["queries"] = data
+
+
         url = url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
 
         return self.__postRequest(url, "querylast", queryLastData)
