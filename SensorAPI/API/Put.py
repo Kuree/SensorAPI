@@ -1,5 +1,6 @@
 import time
 import Configuration
+import logging 
 
 class PutData(object):
     """Single put data"""
@@ -8,6 +9,10 @@ class PutData(object):
         self.value = value
         self.tags = tags.copy()
         self.metric = tags.metric
+        self.logger = logging.getLogger("SensorAPI_API")
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("PutData object created. metric: {0}, timestamp = {1}, value = {2}".format(self.metric, self.timestamp, self.value))
 
     def toPutData(self):
         data = {}
@@ -15,4 +20,8 @@ class PutData(object):
         data["timestamp"] = self.timestamp
         data["value"] = self.value
         data["tags"] = self.tags.toTagData()
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Raw PutData created. metric: {0}, timestamp = {1}, value = {2}".format(self.metric, self.timestamp, self.value))
+
         return data

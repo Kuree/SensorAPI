@@ -1,6 +1,8 @@
 from API import *
 import Queue
 import time
+import logging
+
 class SensorClient:
     '''An easy to use sensor client for OpenTSDB'''
 

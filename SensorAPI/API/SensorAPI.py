@@ -4,6 +4,7 @@ from Put import *
 import json
 import requests
 import time
+import logging
 
 class SensorAPI(object):
     '''API that dealing with web request with OpenTSDB'''

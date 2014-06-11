@@ -3,7 +3,7 @@ from spyne.service import ServiceBase
 from spyne.model.primitive import String
 import json
 import requests
-
+import Server.util
 class OpenTSDBService(ServiceBase):
 
     @srpc(String, _returns=String)
@@ -11,17 +11,27 @@ class OpenTSDBService(ServiceBase):
         jsonData = []
         for d in data:
             jsonData += [d]
-        url = 'http://{0}:{1}/api/put?details'.format("134.82.132.98", 4242)
+        u = Server.util.util()
+        ip = u.getServerIP()
+        port = u.getServerPort()
+        url = 'http://{0}:{1}/api/put?details'.format(ip, port)
         return OpenTSDBService._putRequest(url, jsonData)
 
     @srpc(String, _returns=String)
     def query(data):
-        url = 'http://{0}:{1}/api/query'.format("134.82.132.98", 4242)
+        u = Server.util.util()
+        ip = u.getServerIP()
+        port = u.getServerPort()
+        url = 'http://{0}:{1}/api/query'.format(ip, port)
         return OpenTSDBService._putRequest(url, data)
 
     @srpc(String, _returns=String)
     def querylast(data):
-        url = 'http://{0}:{1}/api/query/last'.format("134.82.132.98", 4242)
+        # reserved for OpenTSDB 2.1
+        u = Server.util.util()
+        ip = u.getServerIP()
+        port = u.getServerPort()
+        url = 'http://{0}:{1}/api/query/last'.format(ip, port)
         return OpenTSDBService._putRequest(url, data)
 
     @staticmethod
@@ -33,4 +43,10 @@ class OpenTSDBService(ServiceBase):
             return r.text
         except Exception as e:
             return e.message
+
+    def test(self):
+        u = Server.util.util()
+        ip = u.getServerIP()
+        port = u.getServerPort()
+        print ip, port
 #

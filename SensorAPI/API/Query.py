@@ -1,4 +1,5 @@
 import re
+import logging
 
 class QueryAggregator(object):
     Sum = "sum"
@@ -18,6 +19,10 @@ class QueryData(object):
             self.aggregator = QueryAggregator.Average
         else:
             self.aggregator  = aggregator
+        self.logger = logging.getLogger("SensorAPI_API")
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("QueryData object created. metric: {0}, aggregator = {1}".format(self.tags.metric, self.aggregator))
 
     def toQueryData(self):
         result = {}
@@ -26,6 +31,9 @@ class QueryData(object):
         result["aggregator"] = self.aggregator
         if self.downSample != None:
             result["downsample"] = self.downSample.toDownSampleData()
+
+        if self.logger.isEnabledFor(logging.DEBUG):
+            self.logger.debug("Raw QueryData created. metric: {0}, aggregator = {1}".format(self.tags.metric, self.aggregator))
         return result
 
 
