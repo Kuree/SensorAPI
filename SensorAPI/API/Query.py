@@ -10,11 +10,12 @@ class QueryAggregator(object):
 
 class QueryData(object):
     """Single query data"""
-    def __init__(self, tags, aggregator, downSample):
+    def __init__(self, tags, aggregator, downSample = None, rate = None):
         '''Initialize the query
         '''
         self.tags = tags
         self.downSample = downSample
+        self.rate = rate
         if aggregator == None:
             self.aggregator = QueryAggregator.Average
         else:
@@ -31,6 +32,9 @@ class QueryData(object):
         result["aggregator"] = self.aggregator
         if self.downSample != None:
             result["downsample"] = self.downSample.toDownSampleData()
+
+        if self.rate != None:
+            result["rate"] = self.rate
 
         if self.logger.isEnabledFor(logging.DEBUG):
             self.logger.debug("Raw QueryData created. metric: {0}, aggregator = {1}".format(self.tags.metric, self.aggregator))

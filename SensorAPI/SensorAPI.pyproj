@@ -32,7 +32,6 @@
     <Compile Include="API\__init__.py" />
     <Compile Include="Client\SensorClient.py" />
     <Compile Include="Client\__init__.py" />
-    <Compile Include="GUI\__init__.py" />
     <Compile Include="example.py" />
     <Compile Include="Server\run.py" />
     <Compile Include="Server\Service\OpenTSDBService.py" />
@@ -43,7 +42,6 @@
   <ItemGroup>
     <Folder Include="API\" />
     <Folder Include="Client\" />
-    <Folder Include="GUI\" />
     <Folder Include="Server\" />
     <Folder Include="Server\Service\" />
   </ItemGroup>
