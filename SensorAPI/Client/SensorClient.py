@@ -34,7 +34,7 @@ class SensorClient:
 
         self.logger = logging.getLogger("SensorAPI_API")
 
-        self.logger.info("SensorAPI created. Host IP: {0}, port: {1}".format(self.conf.getHost(), self.conf.getPort()))
+        self.logger.info("SensorAPI created. Host IP: {0}, port: {1}".format(self.conf.getQueueHost(), self.conf.getQueuePort()))
 
     def singlePut(self, timestamp, value, tags):
         '''

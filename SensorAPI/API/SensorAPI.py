@@ -5,8 +5,9 @@ import json
 import requests
 import time
 import logging
+from ZeroMQLayer import ZeroMQClient
 
-class SensorAPI(object):
+class SensorAPI(ZeroMQClient.Client):
     '''API that dealing with web request with OpenTSDB'''
     def __init__(self, conf):
         '''
@@ -15,8 +16,11 @@ class SensorAPI(object):
 
         conf: API.Configuration
         '''
+        super(SensorAPI, self).__init__()
         self.config = conf
         self.logger = logging.getLogger("SensorAPI_API")
+        self.SERVER_ENDPOINT = "tcp://{0}:{1}".format(self.config.getQueueHost(), self.config.getQueuePort())
+        self._connect()
         return
     
     def multiplePut(self, putDatas):
@@ -35,8 +39,8 @@ class SensorAPI(object):
 
         for d in putDatas:
             datas += [d.toPutData()]
-        url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest(url, "put", datas)
+        #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        return self.__postRequest("put", datas)
 
     def singlePut(self, putData):
         '''
@@ -47,7 +51,7 @@ class SensorAPI(object):
         '''
         return self.multiplePut([putData])
 
-    def __postRequest(self, url, method, requestData):
+    def __postRequest(self, method, requestData):
         '''
         Basic web request function for Sensor API
         Returns web request response if success; otherwise returns exception message
@@ -56,10 +60,12 @@ class SensorAPI(object):
         requestData: Dictionary structure. The function itself will dump the dictionary to JSON for you
         '''
         try:
-            headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-            jsonData = { method : [requestData]}
-            r = requests.post(url, data=json.dumps(jsonData) , headers=headers)
-            return r.text
+            # headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            jsonData = { "method" : method,
+                        "data": requestData}
+            #r = requests.post(url, data=json.dumps(jsonData) , headers=headers)
+            #return r.text
+            return self._sendData(jsonData)
         except Exception as e:
             return e.message
 
@@ -85,8 +91,8 @@ class SensorAPI(object):
         for query in queries:
             data += [query.toQueryData()]
         queryData["queries"] = data
-        url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest(url, "query", queryData)
+        #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        return self.__postRequest("query", queryData)
 
     
     def singleQuery(self, start, end, queryData):
@@ -112,7 +118,7 @@ class SensorAPI(object):
         queryLastData["queries"] = data
 
 
-        url = url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        #url = url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
 
-        return self.__postRequest(url, "querylast", queryLastData)
+        return self.__postRequest("querylast", queryLastData)
         pass

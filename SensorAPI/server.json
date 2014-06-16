@@ -1,4 +1,6 @@
 {
-    "ServerIP" :  "134.82.132.98",
-    "ServerPort" :  4242
+    "OpenTSDBServerIP" :  "134.82.132.98",
+    "OpenTSDBServerPort" :  4242,
+    "DataAPIPort" :  8000,
+    "VisualAPI" :  8001
 }

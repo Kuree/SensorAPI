@@ -10,18 +10,35 @@ class util:
         ip = s.getsockname()[0]
         s.close()
         return ip
+
     @staticmethod
-    def getServerIP():
+    def getOpenTSDBServerIP():
         if os.path.isfile("server.json"):
             server = json.load(open("server.json", "r"))
-            return server["ServerIP"]
+            return server["OpenTSDBServerIP"]
         else:
             return "localhost"
 
     @staticmethod
-    def getServerPort():
+    def getOpenTSDBServerPort():
         if os.path.isfile("server.json"):
             server = json.load(open("server.json", "r"))
-            return server["ServerPort"]
+            return server["OpenTSDBServerPort"]
         else:
-            return "8000"
+            return 4242
+
+    @staticmethod
+    def getDataAPIPort():
+        if os.path.isfile("server.json"):
+            server = json.load(open("server.json", "r"))
+            return server["DataAPIPort"]
+        else:
+            return 8000
+
+    @staticmethod
+    def getVisualServerPort():
+        if os.path.isfile("server.json"):
+            server = json.load(open("server.json", "r"))
+            return server["VisualAPI"]
+        else:
+            return 8001
