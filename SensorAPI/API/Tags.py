@@ -1,8 +1,7 @@
 from Configuration import *
 
 class Tags:
-    def __init__(self, conf, metric):
-        self.__config = conf
+    def __init__(self, metric):
         self.__tags = {}
         self.metric = metric
 
@@ -24,7 +23,7 @@ class Tags:
             self.__tags[tagName] = tagValue
 
     def copy(self):
-        new = Tags(self.__config, self.metric)
+        new = Tags(self.metric)
         new.__tags = self.__tags.copy()
         return new
 

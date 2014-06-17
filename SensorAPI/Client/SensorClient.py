@@ -22,19 +22,18 @@ class SensorClient:
         return self.api.multiplePut(putDatas)
         
 
-    def __init__(self, conf):
+    def __init__(self):
         '''
         Initialize the sensor client with given configuration
 
         conf: Client.Configuration
         '''
-        self.conf = conf
-        self.api = SensorAPI(conf)
+        self.api = SensorAPI()
         self.__queue = Queue.Queue()
 
         self.logger = logging.getLogger("SensorAPI_API")
 
-        self.logger.info("SensorAPI created. Host IP: {0}, port: {1}".format(self.conf.getQueueHost(), self.conf.getQueuePort()))
+        self.logger.info("SensorAPI created. Host IP: {0}, port: {1}".format(self.api._conf.getQueueHost(), self.api._conf.getQueuePort()))
 
     def singlePut(self, timestamp, value, tags):
         '''

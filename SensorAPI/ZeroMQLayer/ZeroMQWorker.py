@@ -3,13 +3,63 @@ import time
 import zmq
 import requests
 import json
+import logging
+import ConfigParser
+import os
 
-class ZeroMQWorker:
+class _WorkerConf(object):
     def __init__(self):
-        self.HEARTBEAT_LIVENESS = 3
-        self.HEARTBEAT_INTERVAL = 1
-        self.INTERVAL_INIT = 1
-        self.INTERVAL_MAX = 32
+        self.__conf = ConfigParser.ConfigParser()
+        if os.path.isfile("ZeroMQWorker.conf"):
+            self.__conf.read("ZeroMQWorker.conf")
+            logging.info("Using configuration file at ZeroMQWorker.conf")
+        else:
+            self.__conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
+            self.__conf.set("ZeroMQQueueServer", "ServerPort", 5556)
+            self.__conf.set("Worker", "HeartBeatLiveness", 3)
+            self.__conf.set("Worker", "HeartBeatInterval", 1.0)
+            self.__conf.set("Worker", "IntervalInit", 1)
+            self.__conf.set("Worker", "IntervalMax", 32)
+            self.__conf.set("OpenTSDB", "ServerIP", "localhost")
+            self.__conf.set("OpenTSDB", "ServerPort", 4242)
+            logging.warn("Could not find ZeroMQWorker.conf, Use default setting now")
+
+    def getQueueIP(self):
+        return self.__conf.get("ZeroMQQueueServer", "ServerIP")
+
+    def getQueuePort(self):
+        return self.__conf.get("ZeroMQQueueServer", "ServerPort")
+
+    def getWorkerHeartBeatLiveness(self):
+        return self.__conf.getfloat("Worker", "HeartBeatLiveness")
+
+    def getHeartBeatInterval(self):
+        return self.__conf.getfloat("Worker", "HeartBeatInterval")
+
+    def getWorkerIntervalInit(self):
+        return self.__conf.getint("Worker", "IntervalInit")
+
+    def getWorkerIntervalMax(self):
+        return self.__conf.getint("Worker", "IntervalMax")
+
+    def getOpenTSDBIP(self):
+        return self.__conf.get("OpenTSDB", "ServerPort")
+
+    def getOpenTSDBPort(self):
+        return self.__conf.get("OpenTSDB", "ServerPort")
+
+class ZeroMQWorker(object):
+    def __init__(self):
+        self.__conf = _WorkerConf()
+        self.HEARTBEAT_LIVENESS = self.__conf.getWorkerHeartBeatLiveness()
+        self.HEARTBEAT_INTERVAL = self.__conf.getHeartBeatInterval()
+        self.INTERVAL_INIT = self.__conf.getWorkerIntervalInit()
+        self.INTERVAL_MAX = self.__conf.getWorkerIntervalMax()
+
+        self.QUEUE_SERVERIP = self.__conf.getQueueIP()
+        self.QUEUE_SERVERPORT = self.__conf.getQueuePort()
+        self.OPENTSDB_SERVERIP = self.__conf.getOpenTSDBIP()
+        self.OPENTSDB_PORT = self.__conf.getOpenTSDBPort()
 
         #  Paranoid Pirate Protocol constants
         self.PPP_READY = "\x01"      # Signals worker is ready
@@ -30,7 +80,7 @@ class ZeroMQWorker:
         identity = "%04X-%04X" % (randint(0, 0x10000), randint(0, 0x10000))
         self.worker.setsockopt(zmq.IDENTITY, identity)
         self.poller.register(self.worker, zmq.POLLIN)
-        self.worker.connect("tcp://localhost:5556")
+        self.worker.connect("tcp://{0}:{1}".format(self.QUEUE_SERVERIP, self.QUEUE_SERVERPORT))
         self.worker.send(self.PPP_READY)
 
 
@@ -63,7 +113,7 @@ class ZeroMQWorker:
 
 
                 elif len(frames) == 1 and frames[0] == self.PPP_HEARTBEAT:
-                    #print "I: Queue heartbeat"
+                    print "I: Queue heartbeat"
                     liveness = self.HEARTBEAT_LIVENESS
                 else:
                     print "E: Invalid message: %s" % frames
@@ -77,7 +127,7 @@ class ZeroMQWorker:
 
                     if interval < self.INTERVAL_MAX:
                         interval *= 2
-                    self.poller.unregister(worker)
+                    self.poller.unregister(self.worker)
                     self.worker.setsockopt(zmq.LINGER, 0)
                     self.worker.close()
 
@@ -94,7 +144,7 @@ class ZeroMQWorker:
         data = json.loads(jsData)
         method = data["method"]
         requestData = data["data"]
-        url = "http://134.82.132.98:4242/api/{0}".format(method)
+        url = "http://{0}:{1}/api/{2}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT, method)
         r = requests.post(url, data=json.dumps(requestData), headers=headers)
         return r.text
 

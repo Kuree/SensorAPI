@@ -1,4 +1,4 @@
-import Configuration
+import ConfigParser
 from Query import *
 from Put import *
 import json
@@ -6,10 +6,28 @@ import requests
 import time
 import logging
 from ZeroMQLayer import ZeroMQClient
+import os
+
+class _ClientConf(object):
+    def __init__(self):
+        self.conf = ConfigParser.ConfigParser()
+        if os.path.isfile("client.conf"):
+            self.conf.read("client.conf")
+            logging.info("Using configuration file at client.conf")
+        else:
+            self.conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
+            self.conf.set("ZeroMQQueueServer", "ServerPort", 5555)
+            logging.warn("Could not find client.conf. Use default setting now")
+
+    def getQueueHost(self):
+        return self.conf.get("ZeroMQQueueServer", "ServerIP")
+    def getQueuePort(self):
+        return self.conf.get("ZeroMQQueueServer", "ServerPort")
+
 
 class SensorAPI(ZeroMQClient.Client):
     '''API that dealing with web request with OpenTSDB'''
-    def __init__(self, conf):
+    def __init__(self):
         '''
         Initialize the sensor API with Configuration file as the API needs to know the request address and port
         It is recommended to use SensorClient in stead of SensorAPI for flexibility
@@ -17,9 +35,9 @@ class SensorAPI(ZeroMQClient.Client):
         conf: API.Configuration
         '''
         super(SensorAPI, self).__init__()
-        self.config = conf
+        self._conf = _ClientConf()
         self.logger = logging.getLogger("SensorAPI_API")
-        self.SERVER_ENDPOINT = "tcp://{0}:{1}".format(self.config.getQueueHost(), self.config.getQueuePort())
+        self.SERVER_ENDPOINT = "tcp://{0}:{1}".format(self._conf.getQueueHost(), self._conf.getQueuePort())
         self._connect()
         return
     

@@ -1,18 +1,41 @@
 from collections import OrderedDict
 import time
 import logging
-
+import ConfigParser
 import zmq
+import os
+
+class _QueueConf(object):
+    def __init__(self):
+        self.__conf = ConfigParser.ConfigParser()
+        if os.path.isfile("ZeroMQQueue.conf"):
+            self.__conf.read("ZeroMQQueue.conf")
+            logging.info("Using configuration file at ZeroMQQueue.conf")
+        else:
+            self.__conf.set("ZeroMQQueueServer", "FrontEndPort", 5555)
+            self.__conf.set("ZeroMQQueueServer", "BackendPort", 5556)
+            self.__conf.set("Worker", "HeartBeatLiveness", 3)
+            self.__conf.set("Worker", "HeartBeatInterval", 1.0)
+            logging.warn("Could not find ZeroMQQueue.conf, Use default setting now")
+
+    def getFrontEndPort(self):
+        return self.__conf.get("ZeroMQQueueServer", "FrontEndPort")
+
+    def getBackEndPort(self):
+        return self.__conf.get("ZeroMQQueueServer", "BackendPort")
+
+    def getWorkerHeartBeatLiveness(self):
+        return self.__conf.getfloat("Worker", "HeartBeatLiveness")
+
+    def getHeartBeatInterval(self):
+        return self.__conf.getfloat("Worker", "HeartBeatInterval")
 
 
 
-class Worker(object):
-    def __init__(self, address):
+class _Worker(object):
+    def __init__(self, address, heartbeatLiveness, heartbeatInterval):
         self.address = address
-        self.HEARTBEAT_LIVENESS = 3     # 3..5 is reasonable
-        self.HEARTBEAT_INTERVAL = 1.0   # Seconds
-
-        self.expiry = time.time() + self.HEARTBEAT_INTERVAL * self.HEARTBEAT_LIVENESS
+        self.expiry = time.time() + heartbeatLiveness * heartbeatInterval
         
 
 class WorkerQueue(object):
@@ -24,9 +47,9 @@ class WorkerQueue(object):
         self.poll_both = None
         self.poll_workers = None
         self.heartbeat_at = 0.0
-
-        self.HEARTBEAT_LIVENESS = 3     # 3..5 is reasonable
-        self.HEARTBEAT_INTERVAL = 1.0   # Seconds
+        self.__conf = _QueueConf()
+        self.HEARTBEAT_LIVENESS = self.__conf.getWorkerHeartBeatLiveness()
+        self.HEARTBEAT_INTERVAL = self.__conf.getHeartBeatInterval()
 
         #  Paranoid Pirate Protocol constants
         self.PPP_READY = "\x01"      # Signals worker is ready
@@ -36,8 +59,8 @@ class WorkerQueue(object):
         self.context = zmq.Context(1)
         self.frontend = self.context.socket(zmq.ROUTER)
         self.backend = self.context.socket(zmq.ROUTER)
-        self.frontend.bind("tcp://*:5555") # For clients
-        self.backend.bind("tcp://*:5556")  # For workers
+        self.frontend.bind("tcp://*:{0}".format(self.__conf.getFrontEndPort())) # For clients
+        self.backend.bind("tcp://*:{0}".format(self.__conf.getBackEndPort()))  # For workers
 
         self.poll_workers = zmq.Poller()
         self.poll_workers.register(self.backend, zmq.POLLIN)
@@ -70,7 +93,7 @@ class WorkerQueue(object):
                     break
 
                 address = frames[0]
-                self.ready(Worker(address))
+                self.ready(_Worker(address, self.HEARTBEAT_LIVENESS, self.HEARTBEAT_INTERVAL))
 
                 # Validate control message, or return reply to client
                 msg = frames[1:]

@@ -22,7 +22,6 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="API\Configuration.py" />
     <Compile Include="API\Put.py" />
     <Compile Include="API\Query.py" />
     <Compile Include="API\QueryLast.py" />
@@ -31,11 +30,10 @@
     <Compile Include="API\Tags.py" />
     <Compile Include="API\__init__.py" />
     <Compile Include="Client\SensorClient.py" />
+    <Compile Include="Server\run.py" />
     <Compile Include="ZeroMQLayer\ZeroMQClient.py" />
     <Compile Include="Client\__init__.py" />
     <Compile Include="example.py" />
-    <Compile Include="Server\runDataAPI.py" />
-    <Compile Include="Server\runVisualAPI.py" />
     <Compile Include="Server\Service\OpenTSDBService.py" />
     <Compile Include="Server\Service\VisualAPIService.py" />
     <Compile Include="ZeroMQLayer\ZeroMQQueue.py" />
@@ -53,8 +51,9 @@
     <Folder Include="ZeroMQLayer\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="client.json" />
-    <Content Include="server.json" />
+    <Content Include="client.conf" />
+    <Content Include="ZeroMQQueue.conf" />
+    <Content Include="ZeroMQWorker.conf" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

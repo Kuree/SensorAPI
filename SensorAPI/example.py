@@ -8,19 +8,16 @@ import sys
 logger = logging.getLogger("SensorAPI_API")
 logging.basicConfig(format="%(asctime)s %(levelname)s: %(message)s", level=logging.DEBUG)
 
-# create configuration for sensor client
-conf = Configuration()
-
 # create a sensor client
-client = SensorClient(conf)
+client = SensorClient()
 
 # create individual tags
 # tags should not have spaces
-tags1 = Tags(conf, "bucknell.dana")
+tags1 = Tags("bucknell.dana")
 tags1.addTag("sensorID", "1234")
 tags1.addTag("sensorType", "type1")
 
-tags2 = Tags(conf, "bucknell.aw")
+tags2 = Tags("bucknell.aw")
 tags2.addTag("sensorID", "5678")
 tags2.addTag("sensorID", "type2")
 
