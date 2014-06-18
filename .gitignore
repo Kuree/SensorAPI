@@ -213,3 +213,10 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
+SensorServer/SensorServer.py
+GUI/HtmlPage.html
+SensorServer/SensorServer.py
+GUI/Scripts/OpenTSDB.js
+SensorAPI/Server/Server.py
+GUI/HtmlPage.html
+SensorServer/SensorServer.py

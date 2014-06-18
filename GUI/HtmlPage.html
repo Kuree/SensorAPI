@@ -8,20 +8,22 @@
     <script type="text/javascript" src="Scripts/jquery-1.9.0.min.js"></script>
     <script>
         function test() {
-            queryData = 
-                {
-                    "start": 1400000000,
-                    "end": 1403107250,
-                    "queries": [{
-                        "aggregator": "avg",
-                        "metric": "bucknell.dana",
-                        "rate": true,
-                        "tags": {
-                            "sensorID": 1234,
-                            "sensorType" : "type1"
-                        }
-                    }]
-                }
+            queryData =
+            {
+                "start": 1400000000,
+                "end": 1403107250,
+                "queries": [{
+                    "aggregator": "avg",
+
+                    "metric": "Bucknell.athletic_center",
+                    "rate": true,
+                    "tags": {
+                        "sensorID": "demand_tn",
+                        "sensorType": "Demand"
+                    },
+                    "downsample": "30m-avg"
+                }]
+            }
             try {
                 $.ajax({
                     url: "http://134.82.178.158:8888/rickshaw",

@@ -23,12 +23,11 @@ class RickshawHandler(tornado.web.RequestHandler):
             dps = []
             for timestamp, value in dic["dps"].iteritems():
                 point = {}
-                point["x"] = timestamp
+                point["x"] = long(timestamp)
                 point["y"] = value
                 dps.append(point)
+            dps = sorted(dps, key = lambda k: k["x"])
             result.append({name:dps})
-
-        string = json.dumps(result)
         self.write(json.dumps(result))
 
     def set_default_headers(self):
@@ -40,15 +39,25 @@ class RickshawHandler(tornado.web.RequestHandler):
     def prepare(self):
         self.json_args = json_decode(self.request.body)
 
-class RawQueryHandler(tornado.web.RequestHandler):
-    def get(self):
-        pass
+class OpenTSDBHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(self.client.postQuery(self.json_args))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "http://localhost:59437")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
 
 
 
 client = SensorClient()
 application = tornado.web.Application([
     ("/rickshaw", RickshawHandler, dict(client=client)),
+    ("/opentsdb", OpenTSDBHandler, dict(client=client)),
     ])
 application.listen(8888)
 tornado.ioloop.IOLoop.instance().start()
