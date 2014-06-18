@@ -5,27 +5,47 @@
 <script src="Scripts/jquery-1.9.0.min.js"></script>
 
 <body>
-    <div id="chart"></div>
+    <div id="chart_container">
+        <div id="chart"></div>
+        <div id="y_axis"></div>
+    </div>
 </body>
+<style>
+    #chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+    }
 
+    #chart {
+        position: relative;
+        left: 40px;
+    }
+
+    #y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+    }
+</style>
 
 
 <script>
     function test() {
         queryData =
             {
-                "start": 0,
+                "start": 1400000000,
                 "end": 1403107250,
                 "queries": [{
-                    "aggregator": "avg",
+                    "aggregator": "max",
 
-                    "metric": "Bucknell.athletic_center",
-                    "rate": true,
+                    "metric": "Bucknell.academic_west",
+                    "rate": false,
                     "tags": {
-                        "sensorID": "demand_tn",
-                        "sensorType": "Demand"
+                        "sensorID": "usage_today_tn",
+                        "sensorType": "Usage_Today"
                     },
-                    "downsample": "30m-avg"
+                    "downsample": "1d-max"
                 }]
             }
         try {
@@ -68,16 +88,31 @@
             unstack: true,
             series: [
             {
+                name: "Athletic Center Demand",
                 color: '#e41a1c',
-                data: s1
-            },
-            {
-                color: '#377eb8',
-                data: s2
+                data: data[0]["Bucknell.academic_west.sensorType:Usage_Today.sensorID:usage_today_tn"]
             }]
         });
-        var axes = new Rickshaw.Graph.Axis.Time({ graph: graph });
-        
+        var y_ticks = new Rickshaw.Graph.Axis.Y({
+            graph: graph,
+            orientation: 'left',
+            tickFormat: Rickshaw.Fixtures.Number.formatKMBT,
+            pixelsPerTick: 60,
+            element: document.getElementById('y_axis'),
+        });
+
+        graph.render();
+
+        var x_axis = new Rickshaw.Graph.Axis.Time({
+            graph: graph
+        });
+
+        x_axis.render();
+
+        var hoverDetail = new Rickshaw.Graph.HoverDetail({
+            graph: graph
+        });
+
         graph.render()
         
     }
