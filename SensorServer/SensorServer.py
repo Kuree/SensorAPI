@@ -1,0 +1,54 @@
+import API
+import tornado.ioloop
+import tornado.httpserver
+import tornado.web
+import inspect, os
+from tornado.escape import json_decode
+import json
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+os.sys.path.insert(0,parentdir)
+from SensorAPI.API.SensorClient import SensorClient
+
+class RickshawHandler(tornado.web.RequestHandler):
+    def post(self):
+        #data = self.json_args
+        data = json.loads(self.client.postQuery(self.json_args))
+        result = []
+
+        for dic in data:
+            name = dic["metric"]
+            for tagK, tagV in dic["tags"].iteritems():
+                name += ".{0}:{1}".format(tagK, tagV)
+            dps = []
+            for timestamp, value in dic["dps"].iteritems():
+                point = {}
+                point["x"] = timestamp
+                point["y"] = value
+                dps.append(point)
+            result.append({name:dps})
+
+        string = json.dumps(result)
+        self.write(json.dumps(result))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "http://localhost:59437")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+class RawQueryHandler(tornado.web.RequestHandler):
+    def get(self):
+        pass
+
+
+
+client = SensorClient()
+application = tornado.web.Application([
+    ("/rickshaw", RickshawHandler, dict(client=client)),
+    ])
+application.listen(8888)
+tornado.ioloop.IOLoop.instance().start()

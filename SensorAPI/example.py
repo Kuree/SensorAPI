@@ -1,4 +1,4 @@
-from Client import *
+from API.SensorClient import *
 import json
 import requests
 import logging

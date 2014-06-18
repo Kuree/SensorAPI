@@ -1,7 +1,8 @@
-from API import *
 import Queue
 import time
 import logging
+from SensorAPI import SensorAPI
+from API import *
 
 class SensorClient:
     '''An easy to use sensor client for OpenTSDB'''
@@ -129,3 +130,6 @@ class SensorClient:
         for tags in tagsList:
             lastList += [tags]
         return self.api.multipleQueryLast(lastList)
+
+    def postQuery(self, data):
+        return self.api._postRequest("query", data)

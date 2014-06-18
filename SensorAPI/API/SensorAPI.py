@@ -5,8 +5,12 @@ import json
 import requests
 import time
 import logging
-from ZeroMQLayer import ZeroMQClient
 import os
+import inspect, os
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(currentdir)
+os.sys.path.insert(0,parentdir)
+from ZeroMQLayer import *
 
 class _ClientConf(object):
     def __init__(self):
@@ -15,6 +19,7 @@ class _ClientConf(object):
             self.conf.read("client.conf")
             logging.info("Using configuration file at client.conf")
         else:
+            self.conf.add_section("ZeroMQQueueServer")
             self.conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
             self.conf.set("ZeroMQQueueServer", "ServerPort", 5555)
             logging.warn("Could not find client.conf. Use default setting now")
@@ -58,7 +63,7 @@ class SensorAPI(ZeroMQClient.Client):
         for d in putDatas:
             datas += [d.toPutData()]
         #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest("put", datas)
+        return self._postRequest("put", datas)
 
     def singlePut(self, putData):
         '''
@@ -69,7 +74,7 @@ class SensorAPI(ZeroMQClient.Client):
         '''
         return self.multiplePut([putData])
 
-    def __postRequest(self, method, requestData):
+    def _postRequest(self, method, requestData):
         '''
         Basic web request function for Sensor API
         Returns web request response if success; otherwise returns exception message
@@ -79,8 +84,9 @@ class SensorAPI(ZeroMQClient.Client):
         '''
         try:
             # headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            data = requestData if type(requestData) is not str else json.loads(requestData)
             jsonData = { "method" : method,
-                        "data": requestData}
+                        "data": data}
             #r = requests.post(url, data=json.dumps(jsonData) , headers=headers)
             #return r.text
             return self._sendData(jsonData)
@@ -110,7 +116,7 @@ class SensorAPI(ZeroMQClient.Client):
             data += [query.toQueryData()]
         queryData["queries"] = data
         #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
-        return self.__postRequest("query", queryData)
+        return self._postRequest("query", queryData)
 
     
     def singleQuery(self, start, end, queryData):
@@ -138,5 +144,5 @@ class SensorAPI(ZeroMQClient.Client):
 
         #url = url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
 
-        return self.__postRequest("querylast", queryLastData)
+        return self._postRequest("querylast", queryLastData)
         pass

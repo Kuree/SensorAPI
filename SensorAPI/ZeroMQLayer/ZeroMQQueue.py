@@ -12,8 +12,10 @@ class _QueueConf(object):
             self.__conf.read("ZeroMQQueue.conf")
             logging.info("Using configuration file at ZeroMQQueue.conf")
         else:
+            self.__conf.add_section("ZeroMQQueueServer")
             self.__conf.set("ZeroMQQueueServer", "FrontEndPort", 5555)
             self.__conf.set("ZeroMQQueueServer", "BackendPort", 5556)
+            self.__conf.add_section("Worker")
             self.__conf.set("Worker", "HeartBeatLiveness", 3)
             self.__conf.set("Worker", "HeartBeatInterval", 1.0)
             logging.warn("Could not find ZeroMQQueue.conf, Use default setting now")
