@@ -46,7 +46,7 @@ class _WorkerConf(object):
         return self.__conf.getint("Worker", "IntervalMax")
 
     def getOpenTSDBIP(self):
-        return self.__conf.get("OpenTSDB", "ServerPort")
+        return self.__conf.get("OpenTSDB", "ServerIP")
 
     def getOpenTSDBPort(self):
         return self.__conf.get("OpenTSDB", "ServerPort")
