@@ -22,12 +22,18 @@ class _ClientConf(object):
             self.conf.add_section("ZeroMQQueueServer")
             self.conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
             self.conf.set("ZeroMQQueueServer", "ServerPort", 5555)
+            self.conf.add_section("ZeroMQClient")
+            self.conf.set("ZeroMQClient", "RequestTimeout", 10000)
             logging.warn("Could not find client.conf. Use default setting now")
 
     def getQueueHost(self):
         return self.conf.get("ZeroMQQueueServer", "ServerIP")
+
     def getQueuePort(self):
         return self.conf.get("ZeroMQQueueServer", "ServerPort")
+
+    def getRequestTimeout(self):
+        return self.conf.getint("ZeroMQClient", "RequestTimeout")
 
 
 class SensorAPI(ZeroMQClient.Client):
@@ -43,6 +49,7 @@ class SensorAPI(ZeroMQClient.Client):
         self._conf = _ClientConf()
         self.logger = logging.getLogger("SensorAPI_API")
         self.SERVER_ENDPOINT = "tcp://{0}:{1}".format(self._conf.getQueueHost(), self._conf.getQueuePort())
+        self.REQUEST_TIMEOUT = self._conf.getRequestTimeout()
         self._connect()
         return
     
