@@ -1,5 +1,3 @@
-from Configuration import *
-
 class Tags:
     def __init__(self, metric):
         self.__tags = {}

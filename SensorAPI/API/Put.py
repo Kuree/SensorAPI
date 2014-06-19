@@ -1,5 +1,4 @@
 import time
-import Configuration
 import logging 
 
 class PutData(object):

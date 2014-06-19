@@ -19,7 +19,7 @@ def work(count, seed, tag):
         print client.batch()
 
 threadList = []
-for i in range(10):
+for i in range(4):
     t = threading.Thread(target = work, args = (count, random.random(), tag,))
     threadList.append(t)
 

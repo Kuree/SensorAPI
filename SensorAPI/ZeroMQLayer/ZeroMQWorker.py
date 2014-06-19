@@ -73,6 +73,9 @@ class ZeroMQWorker(object):
         self.context = None
         self.poller = None
 
+        self.s = requests.Session()
+        r  = self.s.get("http://{0}:{1}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT))
+        print r.text
         pass
 
     def connect(self):
@@ -148,7 +151,7 @@ class ZeroMQWorker(object):
         method = data["method"]
         requestData = data["data"]
         url = "http://{0}:{1}/api/{2}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT, method)
-        r = requests.post(url, data=json.dumps(requestData), headers=headers)
+        r = self.s.post(url, data=json.dumps(requestData), headers=headers)
         return r.text
 
 
