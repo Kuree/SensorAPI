@@ -70,7 +70,7 @@ class SensorAPI(ZeroMQClient.Client):
         for d in putDatas:
             datas += [d.toPutData()]
         #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
-        return self._postRequest("put", datas)
+        return self._postRequest("put?details", datas)
 
     def singlePut(self, putData):
         '''

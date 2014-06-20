@@ -74,8 +74,8 @@ class ZeroMQWorker(object):
         self.poller = None
 
         self.s = requests.Session()
-        r  = self.s.get("http://{0}:{1}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT))
-        print r.text
+        # Get connection session
+        self.s.get("http://{0}:{1}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT))
         pass
 
     def connect(self):

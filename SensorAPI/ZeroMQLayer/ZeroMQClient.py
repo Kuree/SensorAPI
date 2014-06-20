@@ -7,7 +7,7 @@ import json
 class Client(object):
 
     def __init__(self):
-        self.REQUEST_TIMEOUT = 2500
+        self.REQUEST_TIMEOUT = 100000
         self.REQUEST_RETRIES = 3
         self.SERVER_ENDPOINT = ""
         self.__client = None
