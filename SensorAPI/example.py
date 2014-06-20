@@ -41,10 +41,10 @@ print client.singleQuery(start, client.nowMS(), tags1)
 
 
 
-# query last put
-# OpenTSDB 2.0 does not support query last
-# Waiting for 2.1
-#print client.singleQueryLast(tags1)
+## query last put
+## OpenTSDB 2.0 does not support query last
+## Waiting for 2.1
+##print client.singleQueryLast(tags1)
 
 
 
