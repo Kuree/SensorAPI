@@ -220,3 +220,6 @@ GUI/Scripts/OpenTSDB.js
 SensorAPI/Server/Server.py
 GUI/HtmlPage.html
 SensorServer/SensorServer.py
+SensorAPI/example.py
+SensorAPI/exam.py
+SensorAPI/example.py
