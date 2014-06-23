@@ -17,17 +17,6 @@ class _WorkerConf(object):
             logging.info("Using configuration file at ZeroMQWorker.conf")
             hasFile = True
         else:
-        #    self.__conf.add_section("ZeroMQQueueServer")
-        #    self.__conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
-        #    self.__conf.set("ZeroMQQueueServer", "ServerPort", 5556)
-        #    self.__conf.add_section("Worker")
-        #    self.__conf.set("Worker", "HeartBeatLiveness", 3)
-        #    self.__conf.set("Worker", "HeartBeatInterval", 1.0)
-        #    self.__conf.set("Worker", "IntervalInit", 1)
-        #    self.__conf.set("Worker", "IntervalMax", 32)
-        #    self.__conf.add_section("OpenTSDB")
-        #    self.__conf.set("OpenTSDB", "ServerIP", "localhost")
-        #    self.__conf.set("OpenTSDB", "ServerPort", 4242)
             logging.warn("Could not find ZeroMQWorker.conf, Use default setting now")
 
         self.queueIP = self.__conf.get("ZeroMQQueueServer", "ServerIP") if hasFile else "localhost"
@@ -122,7 +111,7 @@ class ZeroMQWorker(object):
                     break # Interrupted
 
                 if len(frames) == 3:
-                    print "I: Normal reply"
+                    logging.info("Normal reply")
 
                     frames[2] = self.__postRequests(frames[2]).encode('ascii', 'ignore')
 
@@ -131,16 +120,16 @@ class ZeroMQWorker(object):
 
 
                 elif len(frames) == 1 and frames[0] == self.PPP_HEARTBEAT:
-                    print "I: Queue heartbeat"
+                    logging.info("Queue heartbeat")
                     liveness = self.HEARTBEAT_LIVENESS
                 else:
-                    print "E: Invalid message: %s" % frames
+                    logging.error("E: Invalid message: %s" % frames)
                 interval = self.INTERVAL_INIT
             else:
                 liveness -= 1
                 if liveness == 0:
-                    print "W: Heartbeat failure, can't reach queue"
-                    print "W: Reconnecting in %0.2f..." % interval
+                    logging.warn("W: Heartbeat failure, can't reach queue")
+                    logging.warn("W: Reconnecting in %0.2f..." % interval)
                     time.sleep(interval)
 
                     if interval < self.INTERVAL_MAX:
