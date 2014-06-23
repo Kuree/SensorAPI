@@ -31,6 +31,7 @@
     <Compile Include="API\__init__.py" />
     <Compile Include="API\SensorClient.py" />
     <Compile Include="benchmark.py" />
+    <Compile Include="exam.py" />
     <Compile Include="Server\Server.py" />
     <Compile Include="ZeroMQLayer\ZeroMQClient.py" />
     <Compile Include="example.py" />
