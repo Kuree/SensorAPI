@@ -8,35 +8,29 @@ import os
 class _QueueConf(object):
     def __init__(self):
         self.__conf = ConfigParser.ConfigParser()
-        hasFile = False
         if os.path.isfile("ZeroMQQueue.conf"):
             self.__conf.read("ZeroMQQueue.conf")
             logging.info("Using configuration file at ZeroMQQueue.conf")
-            hasFile = True
         else:
-        #    self.__conf.add_section("ZeroMQQueueServer")
-        #    self.__conf.set("ZeroMQQueueServer", "FrontEndPort", 5555)
-        #    self.__conf.set("ZeroMQQueueServer", "BackendPort", 5556)
-        #    self.__conf.add_section("Worker")
-        #    self.__conf.set("Worker", "HeartBeatLiveness", 3)
-        #    self.__conf.set("Worker", "HeartBeatInterval", 1.0)
+            self.__conf.add_section("ZeroMQQueueServer")
+            self.__conf.set("ZeroMQQueueServer", "FrontEndPort", 5555)
+            self.__conf.set("ZeroMQQueueServer", "BackendPort", 5556)
+            self.__conf.add_section("Worker")
+            self.__conf.set("Worker", "HeartBeatLiveness", 3)
+            self.__conf.set("Worker", "HeartBeatInterval", 1.0)
             logging.warn("Could not find ZeroMQQueue.conf, Use default setting now")
-        self.frontEndPort = self.__conf.getint("ZeroMQQueueServer", "FrontEndPort") if hasFile else 5555
-        self.backEndPort = self.__conf.get("ZeroMQQueueServer", "BackendPort") if hasFile else 5556
-        self.workerLiveness = self.__conf.getfloat("Worker", "HeartBeatLiveness") if hasFile else 3.0
-        self.heartbeatInterval = self.__conf.getfloat("Worker", "HeartBeatInterval") if hasFile else 1.0
-    
+
     def getFrontEndPort(self):
-        return self.frontEndPort
+        return self.__conf.get("ZeroMQQueueServer", "FrontEndPort")
 
     def getBackEndPort(self):
-        return self.backEndPort
+        return self.__conf.get("ZeroMQQueueServer", "BackendPort")
 
     def getWorkerHeartBeatLiveness(self):
-        return self.workerLiveness
+        return self.__conf.getfloat("Worker", "HeartBeatLiveness")
 
     def getHeartBeatInterval(self):
-        return self.heartbeatInterval
+        return self.__conf.getfloat("Worker", "HeartBeatInterval")
 
 
 

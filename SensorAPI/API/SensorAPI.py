@@ -15,36 +15,25 @@ from ZeroMQLayer import *
 class _ClientConf(object):
     def __init__(self):
         self.conf = ConfigParser.ConfigParser()
-        hasFile = False
         if os.path.isfile("client.conf"):
             self.conf.read("client.conf")
             logging.info("Using configuration file at client.conf")
-            hasFile = True
-
         else:
-        #    self.conf.add_section("ZeroMQQueueServer")
-        #    self.conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
-        #    self.conf.set("ZeroMQQueueServer", "ServerPort", 5555)
-        #    self.conf.add_section("ZeroMQClient")
-        #    self.conf.set("ZeroMQClient", "RequestTimeout", 10000)
+            self.conf.add_section("ZeroMQQueueServer")
+            self.conf.set("ZeroMQQueueServer", "ServerIP", "localhost")
+            self.conf.set("ZeroMQQueueServer", "ServerPort", 5555)
+            self.conf.add_section("ZeroMQClient")
+            self.conf.set("ZeroMQClient", "RequestTimeout", 10000)
             logging.warn("Could not find client.conf. Use default setting now")
 
-        self._queueHost = self.conf.get("ZeroMQQueueServer", "ServerIP") if hasFile else "localhost"
-        self._queuePort = self.conf.get("ZeroMQQueueServer", "ServerPort") if hasFile else 5555
-        self._requestTimeout = self.conf.getint("ZeroMQClient", "RequestTimeout") if hasFile else 10000
-        self._isDebug = self.conf.getboolean("ZeroMQClient", "isDebug") if hasFile else True
-
     def getQueueHost(self):
-        return self._queueHost
+        return self.conf.get("ZeroMQQueueServer", "ServerIP")
 
     def getQueuePort(self):
-        return self._queuePort
+        return self.conf.get("ZeroMQQueueServer", "ServerPort")
 
     def getRequestTimeout(self):
-        return self._requestTimeout
-
-    def getDebug(self):
-        return self._isDebug
+        return self.conf.getint("ZeroMQClient", "RequestTimeout")
 
 
 class SensorAPI(ZeroMQClient.Client):
@@ -80,8 +69,8 @@ class SensorAPI(ZeroMQClient.Client):
 
         for d in putDatas:
             datas += [d.toPutData()]
-        method = "put?details" if self._conf.getDebug() else "put"
-        return self._postRequest(method, datas)
+        #url = 'http://{0}:{1}'.format(self.config.getHost(), self.config.getPort())
+        return self._postRequest("put?details", datas)
 
     def singlePut(self, putData):
         '''
@@ -129,7 +118,6 @@ class SensorAPI(ZeroMQClient.Client):
         queryData = {}
         queryData["start"] = start
         queryData["end"] = end
-        queryData["msResolution"] = True
         data = []
         for query in queries:
             data += [query.toQueryData()]
