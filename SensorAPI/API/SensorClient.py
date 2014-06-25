@@ -124,7 +124,7 @@ class SensorClient:
         '''
         Returns the last timestamps and values from given tags list
 
-        tags: list<API.Tags>
+        tagsList: list<API.Tags>
         '''
         lastList=[]
         for tags in tagsList:
@@ -133,3 +133,12 @@ class SensorClient:
 
     def postQuery(self, data):
         return self.api._postRequest("query", data)
+
+    def search(self, tags):
+        '''
+        Returns the result of time series search
+        tags: API.Tags
+        Note: wildcard character works here. For example, you can use * as tag or metric value
+        '''
+        return self.api.search(tags)
+

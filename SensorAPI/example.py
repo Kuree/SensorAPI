@@ -21,9 +21,9 @@ tags2 = Tags("bucknell.aw")
 tags2.addTag("sensorID", "5678")
 tags2.addTag("sensorID", "type2")
 
-## put function will return a state string
-#print client.singlePut(client.nowMS(), 1, tags1)
-#print client.singlePut(client.nowMS(), 2, tags1)
+# put function will return a state string
+print client.singlePut(client.nowMS(), 1, tags1)
+print client.singlePut(client.nowMS(), 2, tags1)
 
 
 # multiple put
@@ -37,6 +37,8 @@ print client.multiplePut(data)
 # query data
 start = client.nowMS() - 2000000 # fake a start time
 print client.singleQuery(start, client.nowMS(), tags1)
+
+# multiple query
 
 
 

@@ -159,3 +159,10 @@ class SensorAPI(ZeroMQClient.Client):
 
         return self._postRequest("querylast", queryLastData)
         pass
+
+
+    def search(self, tag):
+        requestData = {}
+        requestData["metric"] = tag.metric
+        requestData["tags"] = tag.toTagData
+        return self._postRequest("search/tsmeta", requestData)

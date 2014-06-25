@@ -15,23 +15,25 @@ class RickshawHandler(tornado.web.RequestHandler):
         #data = self.json_args
         data = json.loads(self.client.postQuery(self.json_args))
         result = []
-
-        for dic in data:
-            name = dic["metric"]
-            for tagK, tagV in dic["tags"].iteritems():
-                name += ".{0}:{1}".format(tagK, tagV)
-            dps = []
-            for timestamp, value in dic["dps"].iteritems():
-                point = {}
-                point["x"] = long(timestamp)
-                point["y"] = value
-                dps.append(point)
-            dps = sorted(dps, key = lambda k: k["x"])
-            result.append({name:dps})
-        self.write(json.dumps(result))
-
+        try:
+            for dic in data:
+                name = dic["metric"]
+                for tagK, tagV in dic["tags"].iteritems():
+                    name += ".{0}:{1}".format(tagK, tagV)
+                dps = []
+                for timestamp, value in dic["dps"].iteritems():
+                    point = {}
+                    point["x"] = long(timestamp)
+                    point["y"] = value
+                    dps.append(point)
+                dps = sorted(dps, key = lambda k: k["x"])
+                result.append({name:dps})
+            self.write(json.dumps(result))
+        except:
+            # error on the data
+            self.write(data)
     def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "http://localhost:59437")
+        self.set_header("Access-Control-Allow-Origin", "*")
 
     def initialize(self, client):
         self.client = client
@@ -44,7 +46,7 @@ class OpenTSDBHandler(tornado.web.RequestHandler):
         self.write(self.client.postQuery(self.json_args))
 
     def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "http://localhost:59437")
+        self.set_header("Access-Control-Allow-Origin", "*")
 
     def initialize(self, client):
         self.client = client
