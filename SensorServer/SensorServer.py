@@ -13,13 +13,18 @@ from SensorAPI.API.SensorClient import SensorClient
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
         #data = self.json_args
-        data = json.loads(self.client.postQuery(self.json_args))
+        data = self.mapReduce.queryResult(self.json_args)
         result = []
         try:
+            if "error" in data:
+                self.write(json.dumps(data))
+                return
             for dic in data:
                 name = dic["metric"]
-                for tagK, tagV in dic["tags"].iteritems():
-                    name += ".{0}:{1}".format(tagK, tagV)
+                keyList = dic["tags"].keys()
+                keyList.sort()
+                for tagK in keyList:
+                    name += ".{0}:{1}".format(tagK, dic["tags"][tagK])
                 dps = []
                 for timestamp, value in dic["dps"].iteritems():
                     point = {}
@@ -32,34 +37,71 @@ class RickshawHandler(tornado.web.RequestHandler):
         except:
             # error on the data
             self.write(data)
+
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, client):
-        self.client = client
+    def initialize(self, mapReduce):
+        self.mapReduce = mapReduce
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
 
 class OpenTSDBHandler(tornado.web.RequestHandler):
     def post(self):
-        self.write(self.client.postQuery(self.json_args))
+        self.write(json.dumps(self.mapReduce.queryResult(self.json_args)))
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, client):
-        self.client = client
+    def initialize(self, mapReduce):
+        self.mapReduce = mapReduce
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
 
 
 
-client = SensorClient()
-application = tornado.web.Application([
-    ("/rickshaw", RickshawHandler, dict(client=client)),
-    ("/opentsdb", OpenTSDBHandler, dict(client=client)),
-    ])
-application.listen(8888)
-tornado.ioloop.IOLoop.instance().start()
+class MapReduce(object):
+    def __init__(self, client):
+        self.client = client
+
+    def _assignJobs(self, queryData):
+        data = queryData
+        if "queries" not in data:
+            return {"error": "Incorrect query format"}
+        if len(data["queries"]) == 1:
+            return [data]
+        else:
+            start = data["start"]
+            end = data["end"]
+            result = []
+            for query in data["queries"]:
+                request = {}
+                request["start"] = start
+                request["end"] = end
+                request["queries"] = [query]
+                result.append(request)
+            return result
+
+
+    def queryResult(self, queryData):
+        jobs = self._assignJobs(queryData)
+        if  "error" in jobs:
+            return jobs
+        result = []
+        for job in jobs:
+            result += json.loads(self.client.postQuery(job))
+        return result
+    
+
+
+if __name__ == "__main__":
+    client = SensorClient()
+    mapReduce = MapReduce(client)
+    application = tornado.web.Application([
+        ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
+        ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
+        ])
+    application.listen(8888)
+    tornado.ioloop.IOLoop.instance().start()
