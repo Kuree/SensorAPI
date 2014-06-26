@@ -2,7 +2,7 @@
 <link type="text/css" rel="stylesheet" href="Content/rickshaw.min.css">
 <script src="Scripts/d3.min.js"></script>
 <script src="Scripts/rickshaw.min.js"></script>
-<script src="Scripts/jquery-1.9.0.min.js"></script>
+<script src="Scripts/jquery-2.1.1.min.js"></script>
 
 <body>
     <div id="chart_container">
@@ -39,13 +39,50 @@
                 "queries": [{
                     "aggregator": "max",
 
-                    "metric": "Bucknell.academic_west",
+                    "metric": "Table",
                     "rate": false,
                     "tags": {
-                        "sensorID": "usage_today_tn",
-                        "sensorType": "Usage_Today"
+                        "sensor_name": "BattV",
+                        "sensor_units": "Volts",
+                        "sensor_processing": "Smp"
                     },
-                    "downsample": "1d-max"
+                    "downsample": "1h-max"
+                },
+                {
+                    "aggregator": "max",
+
+                    "metric": "Table",
+                    "rate": false,
+                    "tags": {
+                        "sensor_name": "BattV",
+                        "sensor_units": "Volts",
+                        "sensor_processing": "Smp"
+                    },
+                    "downsample": "1h-max"
+                },
+                {
+                    "aggregator": "max",
+
+                    "metric": "Table",
+                    "rate": false,
+                    "tags": {
+                        "sensor_name": "BattV",
+                        "sensor_units": "Volts",
+                        "sensor_processing": "Smp"
+                    },
+                    "downsample": "1h-max"
+                },
+                {
+                    "aggregator": "max",
+
+                    "metric": "Table",
+                    "rate": false,
+                    "tags": {
+                        "sensor_name": "BattV",
+                        "sensor_units": "Volts",
+                        "sensor_processing": "Smp"
+                    },
+                    "downsample": "1h-max"
                 }]
             }
         try {
@@ -90,7 +127,7 @@
             {
                 name: "Athletic Center Demand",
                 color: '#e41a1c',
-                data: data[0]["Bucknell.academic_west.sensorType:Usage_Today.sensorID:usage_today_tn"]
+                data: data[0]["Table.sensor_name:BattV.sensor_processing:Smp.sensor_units:Volts"]
             }]
         });
         var y_ticks = new Rickshaw.Graph.Axis.Y({
