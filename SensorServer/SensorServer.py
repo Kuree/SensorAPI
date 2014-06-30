@@ -9,6 +9,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0,parentdir)
 from SensorAPI.API.SensorClient import SensorClient
+import multiprocessing
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
@@ -118,20 +119,30 @@ class MapReduce(object):
         if  "error" in jobs:
             return jobs
         result = []
-        for job in jobs:
-            result += json.loads(self.client.postQuery(job))
-        return result
-    
+        #for job in jobs:
+        #    result += json.loads(self.client.postQuery(job))
+
+        pool = multiprocessing.Pool(4)
+        result =  pool.map(unPickledQuery, jobs)
+        return result[0]
+
+_client = SensorClient()
+
+import time
+   
+def unPickledQuery(job):
+    print time.time()
+    return json.loads(_client.postQuery(job))
 
 
 if __name__ == "__main__":
-    client = SensorClient()
-    mapReduce = MapReduce(client)
+    
+    mapReduce = MapReduce(_client)
     application = tornado.web.Application([
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
-        ("/querylast", QueryLastHandler, dict(client = client)),
-        ("/lookup", QueryLastHandler, dict(client = client)),
+        ("/querylast", QueryLastHandler, dict(client = _client)),
+        ("/lookup", QueryLastHandler, dict(client = _client)),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
