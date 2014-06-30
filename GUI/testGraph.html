@@ -34,7 +34,7 @@
     function test() {
         queryData =
             {
-                "start": 1400000000,
+                "start": 0,
                 "end": 1403107250,
                 "queries": [{
                     "aggregator": "max",
@@ -58,7 +58,7 @@
                         "sensor_units": "Volts",
                         "sensor_processing": "Smp"
                     },
-                    "downsample": "1h-max"
+                    "downsample": "1d-max"
                 },
                 {
                     "aggregator": "max",
@@ -70,19 +70,7 @@
                         "sensor_units": "Volts",
                         "sensor_processing": "Smp"
                     },
-                    "downsample": "1h-max"
-                },
-                {
-                    "aggregator": "max",
-
-                    "metric": "Table",
-                    "rate": false,
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    },
-                    "downsample": "1h-max"
+                    "downsample": "1d-max"
                 }]
             }
         try {

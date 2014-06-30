@@ -133,6 +133,12 @@ class SensorClient:
 
     def postQuery(self, data):
         return self.api._postRequest("query", data)
+    
+    def postQueryLast(self, data):
+        return self.api._postRequest("query/last", data)
+
+    def lookup(self, data):
+        return self.api._postRequest("search/lookup", data)
 
     def search(self, tags):
         '''

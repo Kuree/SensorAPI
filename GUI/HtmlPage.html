@@ -5,28 +5,25 @@
 </head>
 
 <body>
-    <script type="text/javascript" src="Scripts/jquery-1.9.0.min.js"></script>
+    <script src="Scripts/jquery-2.1.1.min.js"></script>
     <script>
         function test() {
             queryData =
             {
-                "start": 1400000000,
-                "end": 1403107250,
-                "queries": [{
-                    "aggregator": "avg",
-
-                    "metric": "Bucknell.athletic_center",
-                    "rate": true,
+                "queries": [
+                    {
+                    "metric": "Table",
                     "tags": {
-                        "sensorID": "demand_tn",
-                        "sensorType": "Demand"
-                    },
-                    "downsample": "30m-avg"
-                }]
+                        "sensor_name": "BattV",
+                        "sensor_units": "Volts",
+                        "sensor_processing": "Smp"
+                    }
+                    }],
+                "resolve" : true
             }
             try {
                 $.ajax({
-                    url: "http://134.82.178.158:8888/rickshaw",
+                    url: "http://134.82.178.158:8888/querylast",
                     dataType: "json",
                     error: showError,
                     success: showSuccess,
@@ -45,7 +42,7 @@
         };
 
         function showSuccess(data, status, jqXHR) {
-            console.log(data[0]);
+            console.log(data);
         };
         test()
     </script>

@@ -61,6 +61,34 @@ class OpenTSDBHandler(tornado.web.RequestHandler):
         self.json_args = json_decode(self.request.body)
 
 
+class QueryLastHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(json.dumps(self.client.postQueryLast(self.json_args)))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
+class LookupHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(json.dumps(self.client.lookup(self.json_args)))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
 
 class MapReduce(object):
     def __init__(self, client):
@@ -102,6 +130,8 @@ if __name__ == "__main__":
     application = tornado.web.Application([
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
+        ("/querylast", QueryLastHandler, dict(client = client)),
+        ("/lookup", QueryLastHandler, dict(client = client)),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()

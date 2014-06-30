@@ -141,7 +141,7 @@ class ZeroMQWorker(object):
                     self.worker.setsockopt(zmq.LINGER, 0)
                     self.worker.close()
 
-                    self.connect()  # reconnect
+                    self.connect()  # reconnecto
 
                     liveness = self.HEARTBEAT_LIVENESS
             if time.time() > heartbeat_at:
