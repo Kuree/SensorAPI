@@ -1,53 +1,108 @@
-﻿<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+﻿<html>
+
 <head>
-    <title></title>
+    <meta charset="utf-8">
+    <title>Sensor System Demo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link href="Content/bootstrap.min.css" rel="stylesheet" type="text/css" />
+    <link href="Content/gui.css" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="Content/rickshaw.min.css" type="text/css">
+    <link href="Content/bootstrap-datetimepicker.min.css" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript" src="Scripts/jquery-2.1.1.min.js"></script>
+    <script type="text/javascript" src="Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript" src="Scripts/d3.min.js"></script>
+    <script type="text/javascript" src="Scripts/rickshaw.min.js"></script>
+    <script type="text/javascript" src="Scripts/moment.js"></script>
+    <script type="text/javascript" src="Scripts/bootstrap-datetimepicker.min.js"></script>
+    <script type="text/javascript" src="Scripts/SensorSystem.js"></script>
 </head>
 
 <body>
-    <script src="Scripts/jquery-2.1.1.min.js"></script>
-    <script>
-        function test() {
-            queryData =
-            {
-                "queries": [
-                    {
-                    "metric": "Table",
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    }
-                    }],
-                "resolve" : true
-            }
-            try {
-                $.ajax({
-                    url: "http://134.82.178.158:8888/querylast",
-                    dataType: "json",
-                    error: showError,
-                    success: showSuccess,
-                    crossDomain: true,
-                    data: JSON.stringify(queryData),
-                    type: 'POST'
-                    //contentType: "application/json; charset=utf-8"
-                });
-            }
-            catch (err) {
-                console.log(err.stack);
-            }
-        }
-        function showError(error) {
+    <div class="container">
+        <div class="row clearfix">
+            <div class="col-md-12 column">
+                <nav class="navbar navbar-default" role="navigation">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="#">Monitor</a>
+                        <a class="navbar-brand" href="#">Help</a>
+                    </div>
 
-        };
+                    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
 
-        function showSuccess(data, status, jqXHR) {
-            console.log(data);
-        };
-        test()
-    </script>
-    <div>
-        <textarea id="test"></textarea>
+                    </div>
+
+                </nav>
+                <div class="progress" id="progressbar">
+                    <div class="progress-bar progress-success">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row clearfix">
+            <div class="col-md-3 column">
+                <div class="panel-group" id="metrics">
+                   
+                </div>
+            </div>
+            <div class="col-md-9 column">
+                <div class="well">
+                    <div class="container">
+                        <div class="row">
+                            <div class="form-group form-inline">
+                                <div class='col-sm-3'>
+                                    <div class="form-group form-inline">
+                                        <label for="start-time" class="control-label">Start Time</label>
+                                        <div class='input-group date' id='start-time'>
+                                            <input type='text' class="form-control" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='col-sm-3'>
+                                    <div class="form-group form-inline">
+                                        <label for="end-time" class="control-label">End Time</label>
+                                        <div class='input-group date' id='end-time'>
+                                            <input type='text' class="form-control" />
+                                            <span class="input-group-addon">
+                                                <span class="glyphicon glyphicon-calendar"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class='col-sm-1'>
+                                    <div class="btn-group-vertical">
+                                        <button type="button" class="btn btn-default" id="btnView">View</button>
+                                        <button type="button" class="btn btn-default" id="btnAdd">Add To Dashboard</button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                <div class="well">
+                    <div id="chart_container">
+                        <div id="y_axis"></div>
+                        <div id="chart"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+
 </body>
+
 </html>

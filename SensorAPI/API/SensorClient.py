@@ -14,9 +14,10 @@ class SensorClient:
 
 
     def batch(self):
+        '''
+        Submit all the pending data points to the server
+        '''
         putDatas = []
-        #for data in iter(self.__queue.get, "STOP"):
-        #    putDatas.append(data)
         while not self.__queue.empty():
             putDatas.append(self.__queue.get())
         self.__queue.join()

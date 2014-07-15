@@ -9,7 +9,6 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0,parentdir)
 from SensorAPI.API.SensorClient import SensorClient
-import multiprocessing
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
@@ -62,39 +61,8 @@ class OpenTSDBHandler(tornado.web.RequestHandler):
         self.json_args = json_decode(self.request.body)
 
 
-class QueryLastHandler(tornado.web.RequestHandler):
-    def post(self):
-        self.write(json.dumps(self.client.postQueryLast(self.json_args)))
-
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-
-    def initialize(self, client):
-        self.client = client
-
-    def prepare(self):
-        self.json_args = json_decode(self.request.body)
-
-
-class LookupHandler(tornado.web.RequestHandler):
-    def post(self):
-        self.write(json.dumps(self.client.lookup(self.json_args)))
-
-    def set_default_headers(self):
-        self.set_header("Access-Control-Allow-Origin", "*")
-
-    def initialize(self, client):
-        self.client = client
-
-    def prepare(self):
-        self.json_args = json_decode(self.request.body)
-
-
 
 class MapReduce(object):
-    '''
-    MapReduce for OpenTSDB queries
-    '''
     def __init__(self, client):
         self.client = client
 
@@ -122,27 +90,18 @@ class MapReduce(object):
         if  "error" in jobs:
             return jobs
         result = []
-
-        pool = multiprocessing.Pool(4)
-        result =  pool.map(unPickledQuery, jobs)
-        return result[0]
-
-_client = SensorClient()
-
-import time
-   
-def unPickledQuery(job):
-    print time.time()
-    return json.loads(_client.postQuery(job))
+        for job in jobs:
+            result += json.loads(self.client.postQuery(job))
+        return result
+    
 
 
 if __name__ == "__main__":
-    
-    mapReduce = MapReduce(_client)
+    client = SensorClient()
+    mapReduce = MapReduce(client)
     application = tornado.web.Application([
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
-        ("/lookup", LookupHandler, dict(client = _client)),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()

@@ -1,0 +1,22 @@
+﻿.panel-group{
+    overflow-y:scroll;
+    overflow-x: hidden;
+    height:75%;
+}
+
+
+#chart_container {
+        position: relative;
+        font-family: Arial, Helvetica, sans-serif;
+}
+#chart {
+        position: relative;
+        left: 40px;
+        display: inline-block;
+}
+#y_axis {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 40px;
+}

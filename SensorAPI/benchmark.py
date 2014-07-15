@@ -5,7 +5,7 @@ import random
 random.seed(10)
 
 count = 500
-tag = Tags("benchmark.test8")
+tag = Tags("benchmark.test10")
 tag.addTag("sensorID", "benchmark.test11")
 tag.addTag("sensorType", "benchmark")
 
@@ -26,19 +26,19 @@ tag.addTag("sensorType", "benchmark")
 import time
 start = time.time()
 
-#client = SensorClient()
-#for i in range(4000):
-#    for j in range(50):
-#        client.pushToBuffer(1400000000 + i * 50 + j, j, tag)
-#    print client.batch()
-
-
-import json
 client = SensorClient()
-data = client.singleQuery(1400000000, 1400000000 + 3999 * 50 + 49, tag)
-end = time.time()
-print "Used {0} s".format(end -start)
-print len(json.loads(data)[0]["dps"])
+for i in range(10000):
+    for j in range(100):
+        client.pushToBuffer(1400000000 + i * 50 + j, j, tag)
+    print client.batch()
+
+
+#import json
+#client = SensorClient()
+#data = client.singleQuery(1400000000, 1400000000 + 3999 * 50 + 49, tag)
+#end = time.time()
+#print "Used {0} s".format(end -start)
+#print len(json.loads(data)[0]["dps"])
 
 #for thread in threadList:
 #    thread.start()

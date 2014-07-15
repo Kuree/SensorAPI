@@ -2,6 +2,7 @@ import re
 import logging
 
 class QueryAggregator(object):
+    """Query aggregator enum"""
     Sum = "sum"
     Min = "min"
     Max = "max"
@@ -47,7 +48,13 @@ class QueryData(object):
 
 
 class DownSample:
+    """Downsampling object for querying"""
     def __inif__(self, downsampleRate, aggregator):
+        '''
+        Initialize the downsample object.
+        downsampleRate: number prefix with time abbr, e.g. 12m, 1h
+        aggregator: QueryAffregator or a verified string, e.g. avg
+        '''
         self.aggregator = aggregator
         m = re.search("\d+[s,m]", downsampleRate, aggregator)
         if m:
@@ -56,4 +63,7 @@ class DownSample:
             self.downsampleRate = "1m"
 
     def toDownSampleData(self):
+        '''
+        Return the downsample string that OpenTSDB can understand
+        '''
         return "{0}-{1}".format(self.downsampleRate, self.aggregator)
