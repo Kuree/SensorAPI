@@ -6,8 +6,13 @@
 
 <body>
     <div id="chart_container">
-        <div id="chart"></div>
         <div id="y_axis"></div>
+        <div id="chart"></div>
+        <div id="legend_container">
+            <div id="smoother" title="Smoothing"></div>
+            <div id="legend"></div>
+        </div>
+        <div id="x_axis"></div>
     </div>
 </body>
 <style>
@@ -26,110 +31,100 @@
         top: 0;
         bottom: 0;
         width: 40px;
+
+    }
+    #x_axis {
+        position: absolute;
+        left: 0px;
+        height: 0px;
     }
 </style>
 
 
 <script>
-    function test() {
-        queryData =
-            {
-                "start": 1400000000,
-                "end": 1403107250,
-                "queries": [{
-                    "aggregator": "max",
-
-                    "metric": "Table",
-                    "rate": false,
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    },
-                    "downsample": "1h-max"
-                },
-                {
-                    "aggregator": "max",
-
-                    "metric": "Table",
-                    "rate": false,
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    },
-                    "downsample": "1h-max"
-                },
-                {
-                    "aggregator": "max",
-
-                    "metric": "Table",
-                    "rate": false,
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    },
-                    "downsample": "1h-max"
-                },
-                {
-                    "aggregator": "max",
-
-                    "metric": "Table",
-                    "rate": false,
-                    "tags": {
-                        "sensor_name": "BattV",
-                        "sensor_units": "Volts",
-                        "sensor_processing": "Smp"
-                    },
-                    "downsample": "1h-max"
-                }]
-            }
-        try {
-            $.ajax({
-                url: "http://localhost:8888/rickshaw",
-                dataType: "json",
-                error: showError,
-                success: createGraph,
-                crossDomain: true,
-                data: JSON.stringify(queryData),
-                type: 'POST'
-                //contentType: "application/json; charset=utf-8"
-            });
-        }
-        catch (err) {
-            console.log(err.stack);
-        }
+    months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    function getUNIXMonth(timestamp) {
+        return months[(new Date(timestamp * 1000)).getMonth()];
     }
-    function showError(error) {
-        console.log(error.responseText);
-    };
-    function createGraph(data, status, jqXHRob) {
-        console.log("creating graph...")
-        
-        console.log(data)
-        /* Scheme:
-        #e41a1c
-        #377eb8
-        #4daf4a
-        #984ea3
-        #ff7f00
-        #ffff33
-        #a65628
+
+    function aggregateMonths(data) {
+        data = data[0]
+        var month = getUNIXMonth(parseInt(data[0]['x']));
+        var monthSum = 0;
+        var monthlySums = JSON.parse(JSON.stringify(data));
+        //HACK Monthly sums is just data edited. Making an array of dictionaries is kinda slow.
+        //NOTE this works if data is sorted
+        monthCount = 0;
+
+        for (i = 0; i < data.length; i++) {
+            
+            if (getUNIXMonth(parseInt(data[i]['x'])) == month) {
+                monthSum += parseInt(data[i]['y']);
+            }
+            else {
+                month = getUNIXMonth((data[i]['x']) - 1000);
+                monthlySums[monthCount]['x'] = monthCount;
+                monthlySums[monthCount]['y'] = monthSum;
+                console.log(month + ": " + monthSum);
+                monthSum = 0;
+                monthCount++;
+                i--;
+            }
+        }
+        return monthlySums.splice(0, monthCount);
+
+    }
+
+    function createGraph(dps, agMonths) {
+        /*
+        data: array of arrays of dictionaries of datapoints
+            [[{x: 1, y: 30}, {x: 2, y: 36}, {x: 1, y: 33}], [{x: 1, y: 33}, {x: 2, y: 31, {x: 1, y: 39}]]
+            Each dictionary is a data point. Data points are in an array of time series. Time series are in an
+            array so multiple time series can be graphed
         */
+        var parsedData = dps;
+        if (agMonths) {
+            console.log("adding months...");
+            parsedData = [aggregateMonths(dps)];
+        }
+        //console.log("months: " + monthCount)
+        console.log("setting graph...");
+        colors = [
+        "#e41a1c",
+        "#377eb8",
+        "#4daf4a",
+        "#984ea3",
+        "#ff7f00",
+        "#ffff33",
+        "#a65628"
+        ];
+        console.log(parsedData)
+        var series = [];
+        for (i = 0; i < parsedData.length; i++) {
+            series.push({
+                name: metrics[i],
+                color: colors[i%7],
+                data: parsedData[i]
+            })
+        }
+
+        console.log("creating graph...")
+        console.log(series)
         var graph = new Rickshaw.Graph({
             renderer: 'line',
             element: document.querySelector("#chart"),
             width: 580,
             height: 250,
             unstack: true,
-            series: [
-            {
-                name: "Athletic Center Demand",
-                color: '#e41a1c',
-                data: data[0]["Table.sensor_name:BattV.sensor_processing:Smp.sensor_units:Volts"]
-            }]
+            series: series
         });
+        console.log("...graphed")
+        var legend = new Rickshaw.Graph.Legend({
+            graph: graph,
+            element: document.getElementById('legend')
+
+        });
+
         var y_ticks = new Rickshaw.Graph.Axis.Y({
             graph: graph,
             orientation: 'left',
@@ -140,18 +135,108 @@
 
         graph.render();
 
-        var x_axis = new Rickshaw.Graph.Axis.Time({
-            graph: graph
+        var format = function (n) {
+
+            return months[n];
+        }
+
+        var x_ticks = new Rickshaw.Graph.Axis.X({
+            graph: graph,
+            orientation: 'bottom',
+            element: document.getElementById('x_axis'),
+            pixelsPerTick: 200,
+            //tickFormat: format
         });
 
-        x_axis.render();
-
         var hoverDetail = new Rickshaw.Graph.HoverDetail({
-            graph: graph
+            graph: graph,
+            formatter: function(series, x, y) {
+            var date = '<span class="date">' + new Date(x * 1000).toUTCString() + '</span>';
+            var swatch = '<span class="detail_swatch" style="background-color: ' + series.color + '"></span>';
+            var content = swatch + series.name + ": " + parseInt(y) + '<br>' + date;
+            return content;
+        }
         });
 
         graph.render()
-        
     }
-    test()
+
+    function showError(error) {
+        console.log(error.responseText);
+        console.log(error.stack)
+    };
+
+    function query(metrics) {
+        var dps = [];
+        var queries = []
+        for (met = 0; met < metrics.length; met++){
+            queries.push({
+                "aggregator": "max",
+                "metric": "b3.Bucknell." + metrics[met],
+                "rate": false,
+                /*
+                "tags": {
+                    "sensorID": "use_today_tn",
+                    "sensorType": "Use_Today",
+                },
+                */
+                "downsample": "1d-max"
+                
+            })
+        }
+        
+        var queryData =
+            {
+                "start": 1200000000,
+                "end": new Date().getTime()/1000,
+                "queries": queries
+            }
+        try {
+            $.ajax({
+                url: "http://localhost:8888/rickshaw",
+                dataType: "json",
+                error: showError,
+                success: function markData(data, status, jqXHRob) {
+                    try {
+                        console.log("Data", data);
+                        for (j = 0; j < data.length; j++) {
+                            for (var name in data[j]) {
+                                if (data[j].hasOwnProperty(name)) {
+                                    dps.push(data[j][name]);
+                                    console.log(dps)
+                                }
+                            }
+                        }
+                        console.log("dps", dps)
+                        createGraph(dps, false) 
+                    }
+                    catch (err) {
+                        showError(err)
+                    }
+                },
+                crossDomain: true,
+                data: JSON.stringify(queryData),
+                type: 'POST'
+                //contentType: "application/json; charset=utf-8"
+            });
+        }
+
+        catch (err) {
+            console.log(err.stack);
+        }
+    }
+    var metrics = [
+            "athletic_center.resources",
+            //"academic_west.resources"
+            //"bertrand_library.resources"
+            //"breakiron_engineerindg.resources"
+    ];
+    var samplingRate = 20;
+    var nextTime = new Date().getTime() + samplingRate;
+    var timeNow = new Date();
+    //while (true) {
+        if (timeNow <= nextTime) {
+            query(metrics);
+        }
+    //}
 </script>
