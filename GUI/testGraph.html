@@ -36,6 +36,7 @@
             {
                 "start": 0,
                 "end": 1403107250,
+                "db" : "OpenTSDB",
                 "queries": [{
                     "aggregator": "max",
 
@@ -75,7 +76,7 @@
             }
         try {
             $.ajax({
-                url: "http://localhost:8888/rickshaw",
+                url: "http://localhost:8888/query",
                 dataType: "json",
                 error: showError,
                 success: createGraph,

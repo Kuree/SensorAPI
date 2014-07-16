@@ -141,6 +141,9 @@ class SensorClient:
     def lookup(self, data):
         return self.api._postRequest("search/lookup", data)
 
+    def sendData(self, data):
+        return self.api.sendData(data)
+
     def search(self, tags):
         '''
         Returns the result of time series search

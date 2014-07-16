@@ -76,6 +76,21 @@ class QueryLastHandler(tornado.web.RequestHandler):
         self.json_args = json_decode(self.request.body)
 
 
+class QueryHandler(tornado.web.RequestHandler):
+    def post(self):
+        result = self.client.sendData(self.json_args)
+        self.write(json.dumps(result))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
 class LookupHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(json.dumps(self.client.lookup(self.json_args)))
@@ -143,6 +158,7 @@ if __name__ == "__main__":
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
         ("/lookup", LookupHandler, dict(client = _client)),
+        ("/query", QueryHandler, dict(client = _client)),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()

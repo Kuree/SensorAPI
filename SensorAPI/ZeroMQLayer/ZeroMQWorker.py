@@ -7,6 +7,8 @@ import logging
 import ConfigParser
 import os
 import sys
+import MySQLdb
+
 
 class _WorkerConf(object):
     def __init__(self):
@@ -112,8 +114,13 @@ class ZeroMQWorker(object):
 
                 if len(frames) == 3:
                     logging.info("Normal reply")
-
-                    frames[2] = self.__postRequests(frames[2]).encode('ascii', 'ignore')
+                    input = frames[2]
+                    data = json.loads(input)
+                    if "db" in data:
+                        data.pop("db", None)
+                        frames[2] = self.getData(data)
+                    else:
+                        frames[2] = self.__postRequests(input).encode('ascii', 'ignore')
 
                     self.worker.send_multipart(frames)
                     liveness = self.HEARTBEAT_LIVENESS
@@ -157,6 +164,120 @@ class ZeroMQWorker(object):
         url = "http://{0}:{1}/api/{2}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT, method)
         r = self.s.post(url, data=json.dumps(requestData), headers=headers)
         return r.text
+
+
+
+    def getData(self, inputForm):
+        start = inputForm["start"]
+        end = inputForm["end"]
+        metrics = inputForm["queries"]["metrics"]
+        dbType = inputForm["queries"]["dbType"]
+
+        '''
+        if dbType == "KeyiDB":
+            aggregator = jsonForm[4]["extra"]["aggregator"]
+            downsample = jsonForm[4]["extra"]["downsample"]
+            rate = jsonForm[4]["extra"]["rate"]
+            tags = jsonForm[4]["extra"]["tags"]
+        '''
+
+        if dbType == "MySQL":
+            table = inputForm["queries"]["table"]
+
+            # Open database connection
+            db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
+
+            # prepare a cursor object using cursor() method
+            cursor = db.cursor()
+
+            # use metrics to get site and parameter info
+            siteIDs = []
+            paramIDs = []
+            for metric in metrics:
+                siteID_query = "SELECT id FROM sri.sample_site WHERE name='"+metric.split(".")[0]+"'"
+                cursor.execute(siteID_query)
+                siteIDs += [cursor.fetchone()[0]]
+
+                paramID_query = "SELECT id FROM sri.sample_parameter WHERE name='"+metric.split(".")[1]+"'"
+                cursor.execute(paramID_query)
+                paramIDs += [cursor.fetchone()[0]]
+
+
+            # Command to query data
+            temp = "s"+str(siteIDs[0]) + "p"+str(paramIDs[0])
+            # use for every sample value
+    ##        sql = "SELECT "+temp+".datetime as date, "
+            # use for daily average value
+            sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
+
+            for i in range(len(metrics)):
+                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+                sql += "AVG(" + temp + ".sample) AS sample" + temp + ", "
+
+            sql = sql[0:-2]
+            sql += " FROM "
+            for i in range(len(metrics)):
+                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+                sql += "sri."+table+" AS " + temp + ", "
+
+            sql = sql[0:-2]  
+            sql += " WHERE "
+            count = 0
+            for i in range(len(metrics)):
+                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+                if (count > 0):
+                    sql += "AND "
+                sql += temp + ".site_id="+str(siteIDs[i])+" "
+                count += 1
+                sql += "AND " + temp + ".parameter_id="+str(paramIDs[i])+" "
+
+            for i in range(len(metrics)):
+                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+                if i == 0:
+                    sql += "AND " + temp + ".datetime <= " + str(end) + " "
+                    sql += "AND " + temp + ".datetime >= " + str(start) + " "
+                else:
+                    sql += "AND " + temp + ".datetime = " + "s"+str(siteIDs[i-1])+"p"+str(paramIDs[i-1]) + ".datetime "
+            sql += "GROUP BY date"
+
+    ##        print sql
+
+            cursor.execute(sql)
+
+            num_fields = len(cursor.description)
+            ##fieldnames = [i[0] for i in cursor.description]
+
+            results = cursor.fetchall()
+            all_data = []
+
+            for i in range(num_fields-1):
+                all_data += [{}]
+                all_data[i][metrics[i]] = []
+        
+            counts = [0 for metric in metrics]
+            for row in results:
+                # ignore index 0, which is the date
+                for i in range(num_fields-1):
+                    # take out "None"
+                    if (row[i+1] != None and time.mktime(row[0].timetuple()) != None):
+                        all_data[i][metrics[i]] += [{}]
+                        # use for sample
+    ##                    all_data[i][metrics[i]][count]["x"] = row[0]
+                        # use for daily average
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(row[0].timetuple())
+                        all_data[i][metrics[i]][counts[i]]["y"] = row[i+1]
+                        counts[i] += 1
+
+            # disconnect from server
+            db.close()
+
+            #print all_data
+            return json.dumps(all_data)
+
+
+
+
+
 
 if __name__ == "__main__":
     worker = ZeroMQWorker()

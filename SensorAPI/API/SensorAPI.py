@@ -160,6 +160,8 @@ class SensorAPI(ZeroMQClient.Client):
         return self._postRequest("querylast", queryLastData)
         pass
 
+    def sendData(self, data):
+        return self._sendData(data)
 
     def search(self, tag):
         requestData = {}
