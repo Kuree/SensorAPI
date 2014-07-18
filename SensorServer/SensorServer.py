@@ -91,7 +91,7 @@ class QueryHandler(tornado.web.RequestHandler):
         self.json_args = json_decode(self.request.body)
 
 
-class LookupHandler(tornado.web.RequestHandler):
+class OpenTSDBLookupHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(json.dumps(self.client.lookup(self.json_args)))
 
@@ -103,6 +103,44 @@ class LookupHandler(tornado.web.RequestHandler):
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
+
+
+class MySQLLookupHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(self.getParameters())
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+        
+    def getParameters(self):
+
+        # Open database connection
+        db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
+
+        # prepare a cursor object using cursor() method
+        cursor = db.cursor()
+
+        sql = "SELECT name FROM sri.sample_site"
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        sites = {}
+        for row in results:
+            sites[row[0]] = []
+
+        sql = "SELECT name FROM sri.sample_parameter"
+        cursor.execute(sql)
+        param_results = cursor.fetchall()
+    
+        parameters = []
+        for param in param_results:
+            parameters += [param[0]]
+
+        for row in results:
+            sites[row[0]] = parameters
+
+        return sites
 
 
 
@@ -157,8 +195,9 @@ if __name__ == "__main__":
     application = tornado.web.Application([
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
-        ("/lookup", LookupHandler, dict(client = _client)),
+        ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client)),
         ("/query", QueryHandler, dict(client = _client)),
+        ("/mysqllookup", MySQLLookupHandler),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
