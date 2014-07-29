@@ -115,7 +115,6 @@ class MySQLLookupHandler(tornado.web.RequestHandler):
 
         
     def getParameters(self):
-        import MySQLdb
         # Open database connection
         db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
 
@@ -130,13 +129,13 @@ class MySQLLookupHandler(tornado.web.RequestHandler):
         for row in results:
             sites[row[0]] = []
 
-        sql = "SELECT name FROM sri.sample_parameter"
+        sql = "SELECT name,units FROM sri.sample_parameter"
         cursor.execute(sql)
         param_results = cursor.fetchall()
-    
+
         parameters = []
         for param in param_results:
-            parameters += [param[0]]
+            parameters += [{param[0]: param[1]}]
 
         for row in results:
             sites[row[0]] = parameters
