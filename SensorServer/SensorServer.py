@@ -78,14 +78,15 @@ class QueryLastHandler(tornado.web.RequestHandler):
 
 class QueryHandler(tornado.web.RequestHandler):
     def post(self):
-        result = self.client.sendData(self.json_args)
+        result = self.mapReduce.queryResult(self.json_args)
+        #result = self.client.sendData(self.json_args)
         self.write(json.dumps(result))
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, client):
-        self.client = client
+    def initialize(self, mapReduce):
+        self.mapReduce = mapReduce
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -114,7 +115,7 @@ class MySQLLookupHandler(tornado.web.RequestHandler):
 
         
     def getParameters(self):
-
+        import MySQLdb
         # Open database connection
         db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
 
@@ -150,6 +151,7 @@ class MapReduce(object):
     '''
     def __init__(self, client):
         self.client = client
+        self.pool = multiprocessing.Pool(4)
 
     def _assignJobs(self, queryData):
         data = queryData
@@ -176,17 +178,22 @@ class MapReduce(object):
             return jobs
         result = []
 
-        pool = multiprocessing.Pool(4)
-        result =  pool.map(unPickledQuery, jobs)
-        return result[0]
+        result =  self.pool.map(unPickledQuery, jobs)
+        
+        #result =  map(unPickledQuery, jobs)
+        return result
 
 _client = SensorClient()
 
 import time
-   
+
 def unPickledQuery(job):
     print time.time()
-    return json.loads(_client.postQuery(job))
+    result = _client.sendData(job)
+    if len(result) > 0:
+        return json.loads(result)
+    else:
+        return ""
 
 
 if __name__ == "__main__":
@@ -196,7 +203,7 @@ if __name__ == "__main__":
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
         ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client)),
-        ("/query", QueryHandler, dict(client = _client)),
+        ("/query", QueryHandler, dict(mapReduce = mapReduce)),
         ("/mysqllookup", MySQLLookupHandler),
         ])
     application.listen(8888)
