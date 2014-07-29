@@ -8,6 +8,7 @@ import json
 import csv
 import datetime
 import pdb
+
 url_sys = 'http://webctrl.bucknell.edu/_common/webservices/System?wsdl'
 url_eval = 'http://webctrl.bucknell.edu/_common/webservices/Eval?wsdl'
 url_trend = 'http://webctrl.bucknell.edu/_common/webservices/Trend?wsdl'
