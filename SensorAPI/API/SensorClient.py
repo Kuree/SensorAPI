@@ -14,9 +14,10 @@ class SensorClient:
 
 
     def batch(self):
+        '''
+        Submit all the pending data points to the server
+        '''
         putDatas = []
-        #for data in iter(self.__queue.get, "STOP"):
-        #    putDatas.append(data)
         while not self.__queue.empty():
             putDatas.append(self.__queue.get())
         self.__queue.join()
@@ -133,6 +134,15 @@ class SensorClient:
 
     def postQuery(self, data):
         return self.api._postRequest("query", data)
+    
+    def postQueryLast(self, data):
+        return self.api._postRequest("query/last", data)
+
+    def lookup(self, data):
+        return self.api._postRequest("search/lookup", data)
+
+    def sendData(self, data):
+        return self.api.sendData(data)
 
     def search(self, tags):
         '''
@@ -141,4 +151,3 @@ class SensorClient:
         Note: wildcard character works here. For example, you can use * as tag or metric value
         '''
         return self.api.search(tags)
-

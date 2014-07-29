@@ -1,6 +1,7 @@
 from Tags import *
 
 class QueryLast(object):
+    '''Query the last input. Only available for 2.1'''
     def __init__(self, tags):
         self.tags = tags
 

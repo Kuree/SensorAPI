@@ -116,12 +116,15 @@ class ZeroMQWorker(object):
                     logging.info("Normal reply")
                     input = frames[2]
                     data = json.loads(input)
-                    if "db" in data:
-                        data.pop("db", None)
-                        frames[2] = self.getData(data)
-                    else:
-                        frames[2] = self.__postRequests(input).encode('ascii', 'ignore')
-
+                    try:
+                        if "method" in data:
+                            frames[2] = self.__postRequests(input).encode('ascii', 'ignore')
+                        elif "aggregator" not in data["queries"][0]:
+                            frames[2] = self.getDataFromMySQL(data)
+                        else:
+                            frames[2] = self.getDataFromOpenTSDB(input).encode('ascii', 'ignore')
+                    except Exception, ex:
+                        frames[2] = json.dumps({"error" : ex.message})
                     self.worker.send_multipart(frames)
                     liveness = self.HEARTBEAT_LIVENESS
 
@@ -156,6 +159,7 @@ class ZeroMQWorker(object):
                 #print "I: Worker heartbeat"
                 self.worker.send(self.PPP_HEARTBEAT)
 
+
     def __postRequests(self, jsData):
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         data = json.loads(jsData)
@@ -165,13 +169,36 @@ class ZeroMQWorker(object):
         r = self.s.post(url, data=json.dumps(requestData), headers=headers)
         return r.text
 
+    def getDataFromOpenTSDB(self, jsData):
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        url = "http://{0}:{1}/api/{2}".format(self.OPENTSDB_SERVERIP, self.OPENTSDB_PORT, "query")
+        r = self.s.post(url, data=jsData, headers=headers)
+
+        dic = json.loads(r.text)
+        name = dic[0]["metric"]
+        keyList = dic[0]["tags"].keys()
+        keyList.sort()
+        for tagK in keyList:
+            name += ".{0}:{1}".format(tagK, dic[0]["tags"][tagK])
+        dps = []
+        for timestamp, value in dic[0]["dps"].iteritems():
+            point = {}
+            point["x"] = long(timestamp)
+            point["y"] = value
+            dps.append(point)
+        dps = sorted(dps, key = lambda k: k["x"])
+        result = []
+        result.append({name:dps})
+        return json.dumps(result)
 
 
-    def getData(self, inputForm):
+    
+
+
+    def getDataFromMySQL(self, inputForm):
         start = inputForm["start"]
         end = inputForm["end"]
-        metrics = inputForm["queries"]["metrics"]
-        dbType = inputForm["queries"]["dbType"]
+        metrics = inputForm["queries"][0]["metric"]
 
         '''
         if dbType == "KeyiDB":
@@ -181,98 +208,98 @@ class ZeroMQWorker(object):
             tags = jsonForm[4]["extra"]["tags"]
         '''
 
-        if dbType == "MySQL":
-            table = inputForm["queries"]["table"]
+        
+        table = inputForm["queries"][0]["table"]
 
-            # Open database connection
-            db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
+        # Open database connection
+        db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
 
-            # prepare a cursor object using cursor() method
-            cursor = db.cursor()
+        # prepare a cursor object using cursor() method
+        cursor = db.cursor()
 
-            # use metrics to get site and parameter info
-            siteIDs = []
-            paramIDs = []
-            for metric in metrics:
-                siteID_query = "SELECT id FROM sri.sample_site WHERE name='"+metric.split(".")[0]+"'"
-                cursor.execute(siteID_query)
-                siteIDs += [cursor.fetchone()[0]]
+        # use metrics to get site and parameter info
+        siteIDs = []
+        paramIDs = []
+        for metric in metrics:
+            siteID_query = "SELECT id FROM sri.sample_site WHERE name='"+metric.split(".")[0]+"'"
+            cursor.execute(siteID_query)
+            siteIDs += [cursor.fetchone()[0]]
 
-                paramID_query = "SELECT id FROM sri.sample_parameter WHERE name='"+metric.split(".")[1]+"'"
-                cursor.execute(paramID_query)
-                paramIDs += [cursor.fetchone()[0]]
+            paramID_query = "SELECT id FROM sri.sample_parameter WHERE name='"+metric.split(".")[1]+"'"
+            cursor.execute(paramID_query)
+            paramIDs += [cursor.fetchone()[0]]
 
 
-            # Command to query data
-            temp = "s"+str(siteIDs[0]) + "p"+str(paramIDs[0])
-            # use for every sample value
+        # Command to query data
+        temp = "s"+str(siteIDs[0]) + "p"+str(paramIDs[0])
+        # use for every sample value
     ##        sql = "SELECT "+temp+".datetime as date, "
-            # use for daily average value
-            sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
+        # use for daily average value
+        sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
 
-            for i in range(len(metrics)):
-                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
-                sql += "AVG(" + temp + ".sample) AS sample" + temp + ", "
+        for i in range(len(metrics)):
+            temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+            sql += "AVG(" + temp + ".sample) AS sample" + temp + ", "
 
-            sql = sql[0:-2]
-            sql += " FROM "
-            for i in range(len(metrics)):
-                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
-                sql += "sri."+table+" AS " + temp + ", "
+        sql = sql[0:-2]
+        sql += " FROM "
+        for i in range(len(metrics)):
+            temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+            sql += "sri."+table+" AS " + temp + ", "
 
-            sql = sql[0:-2]  
-            sql += " WHERE "
-            count = 0
-            for i in range(len(metrics)):
-                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
-                if (count > 0):
-                    sql += "AND "
-                sql += temp + ".site_id="+str(siteIDs[i])+" "
-                count += 1
-                sql += "AND " + temp + ".parameter_id="+str(paramIDs[i])+" "
+        sql = sql[0:-2]  
+        sql += " WHERE "
+        count = 0
+        for i in range(len(metrics)):
+            temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+            if (count > 0):
+                sql += "AND "
+            sql += temp + ".site_id="+str(siteIDs[i])+" "
+            count += 1
+            sql += "AND " + temp + ".parameter_id="+str(paramIDs[i])+" "
 
-            for i in range(len(metrics)):
-                temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
-                if i == 0:
-                    sql += "AND " + temp + ".datetime <= " + str(end) + " "
-                    sql += "AND " + temp + ".datetime >= " + str(start) + " "
-                else:
-                    sql += "AND " + temp + ".datetime = " + "s"+str(siteIDs[i-1])+"p"+str(paramIDs[i-1]) + ".datetime "
-            sql += "GROUP BY date"
+        for i in range(len(metrics)):
+            temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
+            if i == 0:
+                sql += "AND " + temp + ".datetime <= " + str(end) + " "
+                sql += "AND " + temp + ".datetime >= " + str(start) + " "
+            else:
+                sql += "AND " + temp + ".datetime = " + "s"+str(siteIDs[i-1])+"p"+str(paramIDs[i-1]) + ".datetime "
+        sql += "GROUP BY date"
 
     ##        print sql
 
-            cursor.execute(sql)
+        cursor.execute(sql)
 
-            num_fields = len(cursor.description)
-            ##fieldnames = [i[0] for i in cursor.description]
+        num_fields = len(cursor.description)
+        ##fieldnames = [i[0] for i in cursor.description]
 
-            results = cursor.fetchall()
-            all_data = []
+        results = cursor.fetchall()
+        all_data = []
 
-            for i in range(num_fields-1):
-                all_data += [{}]
-                all_data[i][metrics[i]] = []
+        for i in range(num_fields-1):
+            all_data += [{}]
+            all_data[i][metrics[i]] = []
         
-            counts = [0 for metric in metrics]
-            for row in results:
-                # ignore index 0, which is the date
-                for i in range(num_fields-1):
-                    # take out "None"
-                    if (row[i+1] != None and time.mktime(row[0].timetuple()) != None):
-                        all_data[i][metrics[i]] += [{}]
-                        # use for sample
-    ##                    all_data[i][metrics[i]][count]["x"] = row[0]
-                        # use for daily average
-                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(row[0].timetuple())
-                        all_data[i][metrics[i]][counts[i]]["y"] = row[i+1]
-                        counts[i] += 1
+        counts = [0 for metric in metrics]
+        for row in results:
+            # ignore index 0, which is the date
+            for i in range(num_fields-1):
+                # take out "None"
+                if (row[i+1] != None and time.mktime(row[0].timetuple()) != None):
+                    all_data[i][metrics[i]] += [{}]
+                # use for sample
+    ##                all_data[i][metrics[i]][count]["x"] = row[0]
+                # use for daily average
+                    all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(row[0].timetuple())
+                    all_data[i][metrics[i]][counts[i]]["y"] = row[i+1]
+                    counts[i] += 1
 
-            # disconnect from server
-            db.close()
+        # disconnect from server
+        db.close()
 
-            #print all_data
-            return json.dumps(all_data)
+        #print all_data
+        return json.dumps(all_data)
 
 
 
