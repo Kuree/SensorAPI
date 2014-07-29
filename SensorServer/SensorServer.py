@@ -9,6 +9,7 @@ currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentfram
 parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0,parentdir)
 from SensorAPI.API.SensorClient import SensorClient
+import multiprocessing
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
@@ -61,10 +62,96 @@ class OpenTSDBHandler(tornado.web.RequestHandler):
         self.json_args = json_decode(self.request.body)
 
 
+class QueryLastHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(json.dumps(self.client.postQueryLast(self.json_args)))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
+class QueryHandler(tornado.web.RequestHandler):
+    def post(self):
+        result = self.mapReduce.queryResult(self.json_args)
+        #result = self.client.sendData(self.json_args)
+        self.write(json.dumps(result))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, mapReduce):
+        self.mapReduce = mapReduce
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
+class OpenTSDBLookupHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(json.dumps(self.client.lookup(self.json_args)))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, client):
+        self.client = client
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+
+class MySQLLookupHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(self.getParameters())
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+        
+    def getParameters(self):
+        import MySQLdb
+        # Open database connection
+        db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
+
+        # prepare a cursor object using cursor() method
+        cursor = db.cursor()
+
+        sql = "SELECT name FROM sri.sample_site"
+        cursor.execute(sql)
+        results = cursor.fetchall()
+
+        sites = {}
+        for row in results:
+            sites[row[0]] = []
+
+        sql = "SELECT name FROM sri.sample_parameter"
+        cursor.execute(sql)
+        param_results = cursor.fetchall()
+    
+        parameters = []
+        for param in param_results:
+            parameters += [param[0]]
+
+        for row in results:
+            sites[row[0]] = parameters
+
+        return sites
+
+
 
 class MapReduce(object):
+    '''
+    MapReduce for OpenTSDB queries
+    '''
     def __init__(self, client):
         self.client = client
+        self.pool = multiprocessing.Pool(4)
 
     def _assignJobs(self, queryData):
         data = queryData
@@ -90,18 +177,34 @@ class MapReduce(object):
         if  "error" in jobs:
             return jobs
         result = []
-        for job in jobs:
-            result += json.loads(self.client.postQuery(job))
+
+        result =  self.pool.map(unPickledQuery, jobs)
+        
+        #result =  map(unPickledQuery, jobs)
         return result
-    
+
+_client = SensorClient()
+
+import time
+
+def unPickledQuery(job):
+    print time.time()
+    result = _client.sendData(job)
+    if len(result) > 0:
+        return json.loads(result)
+    else:
+        return ""
 
 
 if __name__ == "__main__":
-    client = SensorClient()
-    mapReduce = MapReduce(client)
+    
+    mapReduce = MapReduce(_client)
     application = tornado.web.Application([
         ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
         ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
+        ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client)),
+        ("/query", QueryHandler, dict(mapReduce = mapReduce)),
+        ("/mysqllookup", MySQLLookupHandler),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
