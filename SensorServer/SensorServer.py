@@ -12,6 +12,7 @@ from SensorAPI.API.SensorClient import SensorClient
 import multiprocessing
 import collections
 import csv
+import io
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
