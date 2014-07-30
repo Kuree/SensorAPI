@@ -10,6 +10,8 @@ parentdir = os.path.dirname(currentdir)
 os.sys.path.insert(0,parentdir)
 from SensorAPI.API.SensorClient import SensorClient
 import multiprocessing
+import collections
+import csv
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
@@ -104,6 +106,48 @@ class OpenTSDBLookupHandler(tornado.web.RequestHandler):
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
+
+class OpenTSDBToCSVHandler(tornado.web.RequestHandler):
+    def post(self):
+        self.write(self.openTSDB_to_CSV(self.json_args["openTSDB"], self.json_args["units"]))
+
+    def set_default_headers(self):
+        self.set_header("Access-Control-Allow-Origin", "*")
+
+    def prepare(self):
+        self.json_args = json_decode(self.request.body)
+
+    def openTSDB_to_CSV(self, openTSDB, units):
+
+        if (len(openTSDB) != len(units)):
+            return json.dumps({"error": "the inputs don't match up in number of time series"})
+    
+        # header included
+        # separated by commas
+        separator = ","
+
+        header = ["Time Stamp"]
+        all_data = {}
+        for i in range(len(openTSDB)):
+            header += [openTSDB[i]["name"] + ": " + units[i]]
+            for point in openTSDB[i]["data"]:
+                if (point["x"] not in all_data.keys()):
+                    all_data[point["x"]] = []
+                    for j in range(i):
+                        all_data[point["x"]] += [""]
+                all_data[point["x"]] += [point["y"]]
+            for x_value in all_data.keys():
+                if (len(all_data[x_value]) != i+1):
+                    all_data[x_value] += [""]
+
+        with io.BytesIO() as f:
+           writer = csv.writer(f, delimiter=separator)
+           writer.writerow(header)
+           keys = all_data.keys()
+           keys.sort()
+           for key in keys:
+               writer.writerow([time.asctime(time.gmtime(key))]+all_data[key])
+           return f.getvalue()
 
 
 class MySQLLookupHandler(tornado.web.RequestHandler):
@@ -204,6 +248,7 @@ if __name__ == "__main__":
         ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client)),
         ("/query", QueryHandler, dict(mapReduce = mapReduce)),
         ("/mysqllookup", MySQLLookupHandler),
+        ("/opentsdbtocsv", OpenTSDBToCSVHandler),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
