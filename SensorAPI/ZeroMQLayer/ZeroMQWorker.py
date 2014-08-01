@@ -239,6 +239,8 @@ class ZeroMQWorker(object):
         #sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
 
         # '2007-11-30 10:30:19'
+        sql = ""
+
         if (inputForm["queries"][0]["downsample-time"] == "m"):
              # minute
              sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 100 as date, "
