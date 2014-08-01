@@ -233,9 +233,26 @@ class ZeroMQWorker(object):
         # Command to query data
         temp = "s"+str(siteIDs[0]) + "p"+str(paramIDs[0])
         # use for every sample value
-    ##        sql = "SELECT "+temp+".datetime as date, "
+##        sql = "SELECT "+temp+".datetime as date, "
         # use for daily average value
-        sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
+        #sql = "SELECT DATE(FROM_UNIXTIME("+temp+".datetime)) as date, "
+
+        # '2007-11-30 10:30:19'
+        if (inputForm["queries"][0]["downsample-time"] == "m"):
+             # minute
+             sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 100 as date, "
+        if (inputForm["queries"][0]["downsample-time"] == "h"):
+             # hour
+             sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 10000 as date, "
+        if (inputForm["queries"][0]["downsample-time"] == "d"):
+             # day
+             sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 1000000 as date, "
+        if (inputForm["queries"][0]["downsample-time"] == "m"):
+             # month
+             sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 100000000 as date, "
+        if (inputForm["queries"][0]["downsample-time"] == "y"):
+             # year
+             sql = "SELECT (FROM_UNIXTIME("+temp+".datetime)+0) DIV 10000000000 as date, "
 
         for i in range(len(metrics)):
             temp = "s"+str(siteIDs[i]) + "p"+str(paramIDs[i])
@@ -286,12 +303,26 @@ class ZeroMQWorker(object):
             # ignore index 0, which is the date
             for i in range(num_fields-1):
                 # take out "None"
-                if (row[i+1] != None and time.mktime(row[0].timetuple()) != None):
+                if (row[i+1] != None and row[0] != None):
                     all_data[i][metrics[i]] += [{}]
-                # use for sample
-    ##                all_data[i][metrics[i]][count]["x"] = row[0]
-                # use for daily average
-                    all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(row[0].timetuple())
+                    timestamp = str(row[0])
+                    print row[0]
+                    #timestamp = timestamp[4:5] + "/" + timestamp[6:7] + "/" + timestamp[0:3]
+                    if (inputForm["queries"][0]["downsample-time"] == "m"):
+                        # minute
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(datetime.datetime.strptime(timestamp,"%Y%m%d%H%M").timetuple())
+                    if (inputForm["queries"][0]["downsample-time"] == "h"):
+                        # hour
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(datetime.datetime.strptime(timestamp,"%Y%m%d%H").timetuple())
+                    if (inputForm["queries"][0]["downsample-time"] == "d"):
+                        # day
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(datetime.datetime.strptime(timestamp,"%Y%m%d").timetuple())
+                    if (inputForm["queries"][0]["downsample-time"] == "m"):
+                        # month
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(datetime.datetime.strptime(timestamp,"%Y%m").timetuple())
+                    if (inputForm["queries"][0]["downsample-time"] == "y"):
+                        # year
+                        all_data[i][metrics[i]][counts[i]]["x"] = time.mktime(datetime.datetime.strptime(timestamp,"%Y").timetuple())
                     all_data[i][metrics[i]][counts[i]]["y"] = row[i+1]
                     counts[i] += 1
 

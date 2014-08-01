@@ -13,6 +13,7 @@ import multiprocessing
 import collections
 import csv
 import io
+import MySQLdb
 
 class RickshawHandler(tornado.web.RequestHandler):
     def post(self):
@@ -148,7 +149,8 @@ class OpenTSDBToCSVHandler(tornado.web.RequestHandler):
            keys.sort()
            for key in keys:
                writer.writerow([time.asctime(time.gmtime(key))]+all_data[key])
-           return f.getvalue()
+           result = f.getvalue()
+           return result
 
 
 class MySQLLookupHandler(tornado.web.RequestHandler):
