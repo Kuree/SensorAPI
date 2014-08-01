@@ -8,6 +8,7 @@ import ConfigParser
 import os
 import sys
 import MySQLdb
+import datetime
 
 
 class _WorkerConf(object):
