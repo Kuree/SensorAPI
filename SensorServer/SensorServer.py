@@ -23,6 +23,7 @@ class RickshawHandler(tornado.web.RequestHandler):
         try:
             if "error" in data:
                 self.write(json.dumps(data))
+                self.__log.error("OpenTSDB error {0}".format(json.dumps(data)))
                 return
             for dic in data:
                 name = dic["metric"]
@@ -38,16 +39,19 @@ class RickshawHandler(tornado.web.RequestHandler):
                     dps.append(point)
                 dps = sorted(dps, key = lambda k: k["x"])
                 result.append({name:dps})
+            self.__log.info("Request handled")
             self.write(json.dumps(result))
         except:
             # error on the data
+            self.__log.error("In correct format in rickshaw handler")
             self.write(data)
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, mapReduce):
+    def initialize(self, mapReduce, logger):
         self.mapReduce = mapReduce
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -55,12 +59,14 @@ class RickshawHandler(tornado.web.RequestHandler):
 class OpenTSDBHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(json.dumps(self.mapReduce.queryResult(self.json_args)))
+        self.__log.info("Request handled")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, mapReduce):
+    def initialize(self, mapReduce, logger):
         self.mapReduce = mapReduce
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -69,12 +75,14 @@ class OpenTSDBHandler(tornado.web.RequestHandler):
 class QueryLastHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(json.dumps(self.client.postQueryLast(self.json_args)))
+        self.__log.info("Request handled")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, client):
+    def initialize(self, client, logger):
         self.client = client
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -85,12 +93,14 @@ class QueryHandler(tornado.web.RequestHandler):
         result = self.mapReduce.queryResult(self.json_args)
         #result = self.client.sendData(self.json_args)
         self.write(json.dumps(result))
+        self.__log.info("Request handled in QyeryHandler")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, mapReduce):
+    def initialize(self, mapReduce, logger):
         self.mapReduce = mapReduce
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -99,12 +109,14 @@ class QueryHandler(tornado.web.RequestHandler):
 class OpenTSDBLookupHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(json.dumps(self.client.lookup(self.json_args)))
+        self.__log.info("Request handled in OpenTSDBLookupHander")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-    def initialize(self, client):
+    def initialize(self, client, logger):
         self.client = client
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -112,9 +124,13 @@ class OpenTSDBLookupHandler(tornado.web.RequestHandler):
 class OpenTSDBToCSVHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(self.openTSDB_to_CSV(self.json_args["openTSDB"], self.json_args["units"]))
+        self.__log.info("Request handled in OpenTSDBToCSVHandler")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
+
+    def initialize(self, logger):
+        self.__log = logger
 
     def prepare(self):
         self.json_args = json_decode(self.request.body)
@@ -156,11 +172,14 @@ class OpenTSDBToCSVHandler(tornado.web.RequestHandler):
 class MySQLLookupHandler(tornado.web.RequestHandler):
     def post(self):
         self.write(self.getParameters())
+        self.__log.info("Request handled in MySQLLoopupHandler")
 
     def set_default_headers(self):
         self.set_header("Access-Control-Allow-Origin", "*")
 
-        
+    def initialize(self, logger):
+        self.__log = logger
+
     def getParameters(self):
         # Open database connection
         db = MySQLdb.connect("db.eg.bucknell.edu","sri","Hee1quai")
@@ -243,15 +262,19 @@ def unPickledQuery(job):
 
 
 if __name__ == "__main__":
-    
+    import logging
+    LOGFMT = '%(asctime)s %(name)-30s %(levelname)-8s %(message).240s'
+    logging.basicConfig(level = logging.DEBUG,
+                    format = LOGFMT)
+    __log = logging.getLogger('DataServer')
     mapReduce = MapReduce(_client)
     application = tornado.web.Application([
-        ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce)),
-        ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce)),
-        ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client)),
-        ("/query", QueryHandler, dict(mapReduce = mapReduce)),
-        ("/mysqllookup", MySQLLookupHandler),
-        ("/opentsdbtocsv", OpenTSDBToCSVHandler),
+        ("/rickshaw", RickshawHandler, dict(mapReduce = mapReduce, logger =__log)),
+        ("/opentsdb", OpenTSDBHandler, dict(mapReduce = mapReduce, logger = __log)),
+        ("/opentsdblookup", OpenTSDBLookupHandler, dict(client = _client, logger = __log)),
+        ("/query", QueryHandler, dict(mapReduce = mapReduce, logger = __log)),
+        ("/mysqllookup", MySQLLookupHandler, dict(logger = __log)),
+        ("/opentsdbtocsv", OpenTSDBToCSVHandler, dict(logger = __log)),
         ])
     application.listen(8888)
     tornado.ioloop.IOLoop.instance().start()
